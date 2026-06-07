@@ -1,4 +1,4 @@
-param()
+﻿param()
 # Примечание: не устанавливаем ErrorActionPreference=Stop, так как git возвращает ненулевые коды на многие штатные операции
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 
@@ -174,3 +174,4 @@ if ($pushSuccess) {
     Write-Host "  git push -u origin main" -ForegroundColor DarkGray
     exit 1
 }
+
