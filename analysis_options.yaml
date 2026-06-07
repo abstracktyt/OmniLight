@@ -1,0 +1,24 @@
+# ============================================================
+# OmniLight by Abstrackt
+# Файл: analysis_options.yaml — конфигурация линтера Dart
+# ============================================================
+
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Требуем явное указание типов в публичном API
+    always_specify_types: false
+    # Предпочитаем const-конструкторы
+    prefer_const_constructors: true
+    # Предпочитаем финальные поля
+    prefer_final_fields: true
+    # Запрещаем print() в продакшн-коде (используйте debugPrint)
+    avoid_print: true
+
+analyzer:
+  errors:
+    # Предупреждения об устаревшем API
+    deprecated_member_use: warning
+    # Неиспользуемые imports — предупреждения
+    unused_import: warning

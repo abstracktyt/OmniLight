@@ -1,0 +1,39 @@
+name: omnilight
+description: "OmniLight by Abstrackt — универсальный Bluetooth-контроллер LED-лент"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # BLE-взаимодействие с iOS CoreBluetooth через flutter_blue_plus
+  flutter_blue_plus: ^1.35.3
+
+  # Управление состоянием через Provider / ChangeNotifier
+  provider: ^6.1.2
+
+  # Персистентное хранение настроек (тема, язык)
+  shared_preferences: ^2.3.2
+
+  # Haptic-отклик: используем встроенный HapticFeedback из flutter/services.dart
+  # (внешний пакет flutter_haptic_feedback не нужен — покрывается Flutter SDK)
+
+  # Цветовой пикер (HSV-колесо)
+  flutter_colorpicker: ^1.1.0
+
+  # Иконки Material (расширенный набор)
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

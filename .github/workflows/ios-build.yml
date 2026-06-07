@@ -1,0 +1,156 @@
+name: Build OmniLight iOS
+
+# ──────────────────────────────────────────────────────────────
+# Триггеры запуска:
+#   - Каждый пуш в ветку main или release/*
+#   - Каждый Pull Request в ветку main
+# ──────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+  # Разрешаем ручной запуск через интерфейс GitHub
+  workflow_dispatch:
+
+# ──────────────────────────────────────────────────────────────
+# Переменные окружения для всего воркфлоу
+# ──────────────────────────────────────────────────────────────
+env:
+  FLUTTER_VERSION: '3.22.0'   # Целевая версия Flutter (обновляйте по необходимости)
+  JAVA_VERSION: '17'           # Java 17 LTS — требование Flutter 3.x
+
+jobs:
+  build-ios:
+    name: 🍎 Build iOS (OmniLight by Abstrackt)
+    # Используем macOS — единственная ОС, поддерживающая Xcode/iOS-сборку
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      # ────────────────────────────────────────
+      # Шаг 1: Клонируем репозиторий
+      # ────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ────────────────────────────────────────
+      # Шаг 2: Устанавливаем Java (требуется для flutter build tools)
+      # ────────────────────────────────────────
+      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # ────────────────────────────────────────
+      # Шаг 3: Устанавливаем Flutter SDK
+      # ────────────────────────────────────────
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true  # Кэшируем SDK между запусками для ускорения CI
+
+      # ────────────────────────────────────────
+      # Шаг 4: Проверяем окружение Flutter
+      # ────────────────────────────────────────
+      - name: 🔍 Flutter doctor
+        run: flutter doctor -v
+
+      # ────────────────────────────────────────
+      # Шаг 5: Устанавливаем зависимости Dart/Flutter
+      # ────────────────────────────────────────
+      - name: 📦 Install dependencies (flutter pub get)
+        run: flutter pub get
+
+      # ────────────────────────────────────────
+      # Шаг 6: Статический анализ кода
+      # (Помогает поймать ошибки до компиляции)
+      # ────────────────────────────────────────
+      - name: 🔎 Run Flutter analyze
+        run: flutter analyze --no-fatal-infos
+
+      # ────────────────────────────────────────
+      # Шаг 7: Запускаем unit-тесты
+      # ────────────────────────────────────────
+      - name: 🧪 Run unit tests
+        run: flutter test --coverage
+        continue-on-error: true  # Не блокируем сборку если тестов пока нет
+
+      # ────────────────────────────────────────
+      # Шаг 8: Кэшируем CocoaPods для ускорения
+      # ────────────────────────────────────────
+      - name: 🗃️ Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # ────────────────────────────────────────
+      # Шаг 9: Устанавливаем CocoaPods зависимости
+      # ────────────────────────────────────────
+      - name: 🍫 Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+        working-directory: .
+
+      # ────────────────────────────────────────
+      # Шаг 10: Сборка iOS без подписи кода
+      # --no-codesign: подходит для CI-артефактов (не для App Store)
+      # Для подписи требуется добавить сертификаты и provisioning profiles
+      # ────────────────────────────────────────
+      - name: 🏗️ Build iOS (no codesign)
+        run: flutter build ios --no-codesign --release --verbose
+
+      # ────────────────────────────────────────
+      # Шаг 11: Создаём директорию для артефакта и упаковываем сборку
+      # ────────────────────────────────────────
+      - name: 📦 Package build artifact
+        run: |
+          mkdir -p build_output
+          # Копируем .app из DerivedData в папку артефакта
+          APP_PATH=$(find build/ios -name "*.app" -type d | head -1)
+          if [ -n "$APP_PATH" ]; then
+            echo "Найден .app: $APP_PATH"
+            cp -r "$APP_PATH" build_output/OmniLight.app
+          else
+            echo "Предупреждение: .app не найден, упаковываем папку Runner"
+            cp -r build/ios/iphoneos/Runner.app build_output/OmniLight.app || true
+          fi
+          # Архивируем для загрузки
+          cd build_output && zip -r ../OmniLight-iOS-build.zip . && cd ..
+          echo "Артефакт подготовлен: OmniLight-iOS-build.zip"
+
+      # ────────────────────────────────────────
+      # Шаг 12: Загружаем артефакт в GitHub Actions
+      # Артефакт доступен для скачивания 30 дней
+      # ────────────────────────────────────────
+      - name: ⬆️ Upload build artifact to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniLight-iOS-${{ github.sha }}
+          path: OmniLight-iOS-build.zip
+          retention-days: 30
+          if-no-files-found: warn
+
+      # ────────────────────────────────────────
+      # Шаг 13 (опционально): Публикация Release при теге
+      # Раскомментируйте для автоматических релизов при git tag push
+      # ────────────────────────────────────────
+      # - name: 🚀 Create GitHub Release
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: OmniLight-iOS-build.zip
+      #     name: OmniLight ${{ github.ref_name }}
+      #     body: "OmniLight by Abstrackt — автоматическая сборка ${{ github.ref_name }}"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
