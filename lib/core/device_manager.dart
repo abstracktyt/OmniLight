@@ -13,10 +13,129 @@
 
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, ChangeNotifier;
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../drivers/led_driver.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Класс: AppEffect
+// Назначение: Описание эффекта с поддержкой мультиязычности и кодов
+//             эффектов для разных контроллеров.
+// ─────────────────────────────────────────────────────────────────────────────
+class AppEffect {
+  final String id;
+  final Map<String, String> names;
+  final Map<String, int> driverEffectIds;
+  final List<Color> previewColors;
+
+  const AppEffect({
+    required this.id,
+    required this.names,
+    required this.driverEffectIds,
+    required this.previewColors,
+  });
+}
+
+const List<AppEffect> appEffects = [
+  AppEffect(
+    id: 'rainbow_flow',
+    names: {'en': 'Rainbow Flow', 'ru': 'Радужный перелив', 'ua': 'Радужний перелив'},
+    driverEffectIds: {'ELK-BLEDOM': 138, 'SP110E': 1},
+    previewColors: [Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.blue, Colors.purple],
+  ),
+  AppEffect(
+    id: 'rainbow_strobe',
+    names: {'en': 'Rainbow Strobe', 'ru': 'Радужный стробоскоп', 'ua': 'Радужний стробоскоп'},
+    driverEffectIds: {'ELK-BLEDOM': 146, 'SP110E': 2},
+    previewColors: [Colors.red, Colors.green, Colors.blue],
+  ),
+  AppEffect(
+    id: 'rainbow_chase',
+    names: {'en': 'Rainbow Chase', 'ru': 'Радужная погоня', 'ua': 'Радужна погоня'},
+    driverEffectIds: {'ELK-BLEDOM': 154, 'SP110E': 3},
+    previewColors: [Colors.purple, Colors.blue, Colors.cyan],
+  ),
+  AppEffect(
+    id: 'fire_glow',
+    names: {'en': 'Fire Glow', 'ru': 'Пламя огня', 'ua': 'Полум\'я вогню'},
+    driverEffectIds: {'ELK-BLEDOM': 131, 'SP110E': 4},
+    previewColors: [Colors.red, Colors.orange, Colors.yellow],
+  ),
+  AppEffect(
+    id: 'ice_cold',
+    names: {'en': 'Ice Cold', 'ru': 'Холодный лед', 'ua': 'Холодний лід'},
+    driverEffectIds: {'ELK-BLEDOM': 132, 'SP110E': 5},
+    previewColors: [Colors.cyan, Colors.blue, Colors.white],
+  ),
+  AppEffect(
+    id: 'forest_breath',
+    names: {'en': 'Forest Breath', 'ru': 'Дыхание леса', 'ua': 'Дихання лісу'},
+    driverEffectIds: {'ELK-BLEDOM': 129, 'SP110E': 6},
+    previewColors: [Colors.green, Colors.lime, Colors.teal],
+  ),
+  AppEffect(
+    id: 'sunset_fade',
+    names: {'en': 'Sunset Fade', 'ru': 'Закатный градиент', 'ua': 'Західний градієнт'},
+    driverEffectIds: {'ELK-BLEDOM': 133, 'SP110E': 7},
+    previewColors: [Colors.pink, Colors.pinkAccent, Colors.orange],
+  ),
+  AppEffect(
+    id: 'neon_night',
+    names: {'en': 'Neon Cyberpunk', 'ru': 'Неоновый киберпанк', 'ua': 'Неоновий кіберпанк'},
+    driverEffectIds: {'ELK-BLEDOM': 137, 'SP110E': 8},
+    previewColors: [Colors.purpleAccent, Colors.blue, Colors.cyan],
+  ),
+  AppEffect(
+    id: 'white_breath',
+    names: {'en': 'White Breath', 'ru': 'Белое дыхание', 'ua': 'Біле дихання'},
+    driverEffectIds: {'ELK-BLEDOM': 134, 'SP110E': 9},
+    previewColors: [Colors.white, Colors.grey, Colors.white70],
+  ),
+  AppEffect(
+    id: 'red_pulse',
+    names: {'en': 'Red Pulse', 'ru': 'Красный пульс', 'ua': 'Червоний пульс'},
+    driverEffectIds: {'ELK-BLEDOM': 128, 'SP110E': 10},
+    previewColors: [Colors.red, Colors.redAccent],
+  ),
+  AppEffect(
+    id: 'green_pulse',
+    names: {'en': 'Green Pulse', 'ru': 'Зеленый пульс', 'ua': 'Зелений пульс'},
+    driverEffectIds: {'ELK-BLEDOM': 129, 'SP110E': 11},
+    previewColors: [Colors.green, Colors.greenAccent],
+  ),
+  AppEffect(
+    id: 'blue_pulse',
+    names: {'en': 'Blue Pulse', 'ru': 'Синий пульс', 'ua': 'Синій пульс'},
+    driverEffectIds: {'ELK-BLEDOM': 130, 'SP110E': 12},
+    previewColors: [Colors.blue, Colors.blueAccent],
+  ),
+  AppEffect(
+    id: 'white_strobe',
+    names: {'en': 'White Strobe', 'ru': 'Белый стробоскоп', 'ua': 'Білий стробоскоп'},
+    driverEffectIds: {'ELK-BLEDOM': 145, 'SP110E': 13},
+    previewColors: [Colors.white, Colors.white60],
+  ),
+  AppEffect(
+    id: 'christmas',
+    names: {'en': 'Christmas Holiday', 'ru': 'Новогодний перелив', 'ua': 'Новорічний перелив'},
+    driverEffectIds: {'ELK-BLEDOM': 135, 'SP110E': 14},
+    previewColors: [Colors.red, Colors.green],
+  ),
+  AppEffect(
+    id: 'police',
+    names: {'en': 'Police Siren', 'ru': 'Сирена полиции', 'ua': 'Сирена поліції'},
+    driverEffectIds: {'ELK-BLEDOM': 136, 'SP110E': 15},
+    previewColors: [Colors.red, Colors.blue],
+  ),
+  AppEffect(
+    id: 'aurora',
+    names: {'en': 'Aurora Borealis', 'ru': 'Полярное сияние', 'ua': 'Полярне сяйво'},
+    driverEffectIds: {'ELK-BLEDOM': 139, 'SP110E': 16},
+    previewColors: [Colors.deepPurple, Colors.teal, Colors.blue],
+  ),
+];
 
 // Проверка: работаем ли мы на мобильной платформе (iOS/Android)
 // BLE flutter_blue_plus не поддерживает Web, Windows, Linux
@@ -73,12 +192,24 @@ class DeviceManager extends ChangeNotifier {
   DeviceManagerState _state = DeviceManagerState.idle;
   DeviceManagerState get state => _state;
 
+  bool _isScanning = false;
+  bool get isScanning => _isScanning;
+
+  bool _isConnecting = false;
+  bool get isConnecting => _isConnecting;
+
   // ── Список обнаруженных при сканировании устройств ──
   final List<DiscoveredDevice> _discoveredDevices = [];
   List<DiscoveredDevice> get discoveredDevices =>
       List.unmodifiable(_discoveredDevices);
 
-  // ── Активный драйвер (установлен после успешного соединения) ──
+  // ── Активные драйверы (установлены после успешного соединения) ──
+  final Map<String, BaseLedDriver> _activeDrivers = {};
+  Map<String, BaseLedDriver> get activeDrivers => _activeDrivers;
+
+  final List<DiscoveredDevice> _connectedStrips = [];
+  List<DiscoveredDevice> get connectedStrips => List.unmodifiable(_connectedStrips);
+
   BaseLedDriver? _activeDriver;
   BaseLedDriver? get activeDriver => _activeDriver;
 
@@ -224,18 +355,19 @@ class DeviceManager extends ChangeNotifier {
       _setError('Близкая связь (BLE) доступна только на мобильных устройствах (iOS/Android)');
       return;
     }
-    if (_state == DeviceManagerState.scanning) {
+    if (_isScanning) {
       debugPrint('[OmniLight/DeviceManager] Сканирование уже запущено');
-      return;
-    }
-    if (_state == DeviceManagerState.connected) {
-      debugPrint('[OmniLight/DeviceManager] Активное соединение, сканирование запрещено');
       return;
     }
 
     // Очищаем предыдущие результаты
     _discoveredDevices.clear();
-    _setState(DeviceManagerState.scanning);
+    _isScanning = true;
+    if (_state != DeviceManagerState.connected && _state != DeviceManagerState.connecting) {
+      _setState(DeviceManagerState.scanning);
+    } else {
+      notifyListeners();
+    }
 
     // Сначала опрашиваем устройства, которые уже подключены к системе (iOS Auto-Connect или другая программа)
     try {
@@ -306,8 +438,15 @@ class DeviceManager extends ChangeNotifier {
       await FlutterBluePlus.stopScan();
     } catch (_) {}
 
+    _isScanning = false;
     if (_state == DeviceManagerState.scanning) {
-      _setState(DeviceManagerState.idle);
+      if (_activeDrivers.isEmpty) {
+        _setState(DeviceManagerState.idle);
+      } else {
+        _setState(DeviceManagerState.connected);
+      }
+    } else {
+      notifyListeners();
     }
   }
 
@@ -377,23 +516,40 @@ class DeviceManager extends ChangeNotifier {
   Future<void> connectToDevice(DiscoveredDevice discovered) async {
     await stopScan();
 
-    // Определяем драйвер: используем предопределённый или ELK по умолчанию
-    final driver = discovered.matchedDriver ?? ElkBledomDriver();
+    // Создаем НОВЫЙ экземпляр драйвера для этого конкретного подключения
+    final driver = (discovered.matchedDriver is Sp110eDriver)
+        ? Sp110eDriver()
+        : ElkBledomDriver();
+    _isConnecting = true;
     _setState(DeviceManagerState.connecting);
 
     try {
       await driver.connect(discovered.device);
+      
+      final id = discovered.device.remoteId.toString();
+      _activeDrivers[id] = driver;
+      
+      // Добавляем в список подключенных лент
+      _connectedStrips.removeWhere((d) => d.device.remoteId.toString() == id);
+      _connectedStrips.add(discovered);
+      
       _activeDriver = driver;
       _connectedDeviceName = discovered.name;
+      _isConnecting = false;
       _setState(DeviceManagerState.connected);
-      await _addToHistory(discovered.device.remoteId.toString(), discovered.name);
+      await _addToHistory(id, discovered.name);
+      
       debugPrint(
         '[OmniLight/DeviceManager] Подключено: ${discovered.name} '
-        'через ${driver.driverName}',
+        'через ${driver.driverName} (всего подключено: ${_activeDrivers.length})',
       );
     } catch (e) {
+      _isConnecting = false;
       debugPrint('[OmniLight/DeviceManager] Ошибка подключения к ${discovered.name}: $e');
       _setError('Не удалось подключиться к ${discovered.name}: $e');
+      if (_activeDrivers.isNotEmpty) {
+        _setState(DeviceManagerState.connected);
+      }
     }
   }
 
@@ -418,10 +574,39 @@ class DeviceManager extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────
-  // Отключиться от текущего устройства
+  // Отключить конкретное устройство
+  // ─────────────────────────────────────────────
+  Future<void> disconnectDevice(String id) async {
+    final driver = _activeDrivers[id];
+    if (driver != null) {
+      try {
+        await driver.disconnect();
+      } catch (_) {}
+      _activeDrivers.remove(id);
+      _connectedStrips.removeWhere((d) => d.device.remoteId.toString() == id);
+      if (_activeDrivers.isEmpty) {
+        _activeDriver = null;
+        _connectedDeviceName = null;
+        _setState(DeviceManagerState.idle);
+      } else {
+        _activeDriver = _activeDrivers.values.last;
+        _connectedDeviceName = _connectedStrips.last.name;
+        notifyListeners();
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Отключиться от всех устройств
   // ─────────────────────────────────────────────
   Future<void> disconnectCurrent() async {
-    await _activeDriver?.disconnect();
+    for (final driver in _activeDrivers.values) {
+      try {
+        await driver.disconnect();
+      } catch (_) {}
+    }
+    _activeDrivers.clear();
+    _connectedStrips.clear();
     _activeDriver = null;
     _connectedDeviceName = null;
     _setState(DeviceManagerState.idle);
@@ -431,33 +616,79 @@ class DeviceManager extends ChangeNotifier {
   // Команда: установить цвет RGB (с сохранением состояния в UI)
   // ─────────────────────────────────────────────
   Future<void> setRgb(int r, int g, int b) async {
-    if (_activeDriver == null) return;
     _red = r;
     _green = g;
     _blue = b;
     notifyListeners();
-    await _activeDriver!.setRgb(r, g, b);
+    for (final driver in _activeDrivers.values) {
+      try {
+        await driver.setRgb(r, g, b);
+      } catch (e) {
+        debugPrint('[OmniLight/DeviceManager] Ошибка setRgb: $e');
+      }
+    }
   }
 
   // ─────────────────────────────────────────────
   // Команда: установить яркость
   // ─────────────────────────────────────────────
   Future<void> setBrightness(int level) async {
-    if (_activeDriver == null) return;
     _brightness = level.clamp(0, 255);
     notifyListeners();
-    await _activeDriver!.setBrightness(_brightness);
+    for (final driver in _activeDrivers.values) {
+      try {
+        await driver.setBrightness(_brightness);
+      } catch (e) {
+        debugPrint('[OmniLight/DeviceManager] Ошибка setBrightness: $e');
+      }
+    }
   }
 
   // ─────────────────────────────────────────────
   // Команда: включить
   // ─────────────────────────────────────────────
-  Future<void> turnOn() async => await _activeDriver?.turnOn();
+  Future<void> turnOn() async {
+    for (final driver in _activeDrivers.values) {
+      try {
+        await driver.turnOn();
+        // Восстанавливаем цвет и яркость
+        await driver.setRgb(_red, _green, _blue);
+        await driver.setBrightness(_brightness);
+      } catch (e) {
+        debugPrint('[OmniLight/DeviceManager] Ошибка turnOn: $e');
+      }
+    }
+  }
 
   // ─────────────────────────────────────────────
   // Команда: выключить
   // ─────────────────────────────────────────────
-  Future<void> turnOff() async => await _activeDriver?.turnOff();
+  Future<void> turnOff() async {
+    for (final driver in _activeDrivers.values) {
+      try {
+        await driver.turnOff();
+        // Отправляем черный цвет в качестве надежного выключения
+        await driver.setRgb(0, 0, 0);
+      } catch (e) {
+        debugPrint('[OmniLight/DeviceManager] Ошибка turnOff: $e');
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Команда: установить динамический эффект
+  // ─────────────────────────────────────────────
+  Future<void> setEffect(String effectId, int speed) async {
+    for (final driver in _activeDrivers.values) {
+      try {
+        final effect = appEffects.firstWhere((e) => e.id == effectId);
+        final physicalId = effect.driverEffectIds[driver.driverName] ?? 1;
+        await driver.setEffect(physicalId, speed);
+      } catch (e) {
+        debugPrint('[OmniLight/DeviceManager] Ошибка setEffect: $e');
+      }
+    }
+  }
 
   // ─────────────────────────────────────────────
   // Вспомогательные методы изменения состояния
@@ -481,7 +712,9 @@ class DeviceManager extends ChangeNotifier {
   void dispose() {
     _scanSubscription?.cancel();
     _adapterSubscription?.cancel();
-    _activeDriver?.disconnect();
+    for (final driver in _activeDrivers.values) {
+      driver.disconnect();
+    }
     super.dispose();
   }
 }

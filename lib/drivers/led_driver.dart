@@ -89,6 +89,9 @@ abstract class BaseLedDriver {
 
   /// Выключить LED-ленту.
   Future<void> turnOff();
+
+  /// Установить динамический эффект (режим) и скорость.
+  Future<void> setEffect(int effectId, int speed);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -283,8 +286,16 @@ class Sp110eDriver extends _BaseDriverImpl {
   // ─────────────────────────────────────────────
   @override
   Future<void> setBrightness(int level) async {
-    final clamped = level.clamp(0, 255);
-    await sendPacket([0x00, clamped, 0x00, 0x1A]);
+    // Зажимаем значения в диапазоне 0–255
+    final clampedLevel = level.clamp(0, 255);
+    await sendPacket([0x00, clampedLevel, 0x00, 0x1A]);
+  }
+
+  @override
+  Future<void> setEffect(int effectId, int speed) async {
+    // Для SP110E переключаем встроенные эффекты (1-120)
+    final clampedMode = effectId.clamp(1, 120);
+    await sendPacket([clampedMode, 0x09, 0xFA, 0x2C]);
   }
 
   // ─────────────────────────────────────────────
@@ -394,9 +405,10 @@ class ElkBledomDriver extends _BaseDriverImpl {
   // ─────────────────────────────────────────────
   @override
   Future<void> turnOn() async {
-    await sendPacket([
-      0x7E, 0x04, 0x04, 0xF0, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xEF,
-    ]);
+    // Отправляем оба варианта пакета для совместимости с разными версиями прошивки BLEDOM
+    await sendPacket([0x7E, 0x04, 0x04, 0xF0, 0x00, 0x01, 0xFF, 0x00, 0xEF]);
+    await Future.delayed(const Duration(milliseconds: 50));
+    await sendPacket([0x7E, 0x00, 0x04, 0xF0, 0x00, 0x01, 0xFF, 0x00, 0xEF]);
   }
 
   // ─────────────────────────────────────────────
@@ -404,8 +416,29 @@ class ElkBledomDriver extends _BaseDriverImpl {
   // ─────────────────────────────────────────────
   @override
   Future<void> turnOff() async {
+    // Отправляем оба варианта пакета для совместимости с разными версиями прошивки BLEDOM
+    await sendPacket([0x7E, 0x04, 0x04, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xEF]);
+    await Future.delayed(const Duration(milliseconds: 50));
+    await sendPacket([0x7E, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xEF]);
+  }
+
+  // ─────────────────────────────────────────────
+  // Команда: установить эффект
+  // ─────────────────────────────────────────────
+  @override
+  Future<void> setEffect(int effectId, int speed) async {
+    // Нормализуем скорость от 1 до 100 (BLEDOM принимает 1-100)
+    final clampedSpeed = speed.clamp(1, 100);
     await sendPacket([
-      0x7E, 0x04, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xEF,
+      0x7E,
+      0x05,
+      0x03,
+      effectId,
+      clampedSpeed,
+      0x00,
+      0x00,
+      0x00,
+      0xEF,
     ]);
   }
 }

@@ -104,6 +104,26 @@ const Map<String, Map<AppLanguage, String>> _strings = {
     AppLanguage.ru: 'Поддержка и FAQ',
     AppLanguage.ua: 'Підтримка та FAQ',
   },
+  'tab_control': {
+    AppLanguage.en: 'Control',
+    AppLanguage.ru: 'Управление',
+    AppLanguage.ua: 'Керування',
+  },
+  'tab_effects': {
+    AppLanguage.en: 'Effects',
+    AppLanguage.ru: 'Эффекты',
+    AppLanguage.ua: 'Ефекти',
+  },
+  'tab_group': {
+    AppLanguage.en: 'Groups',
+    AppLanguage.ru: 'Группы',
+    AppLanguage.ua: 'Групи',
+  },
+  'tab_support': {
+    AppLanguage.en: 'Support',
+    AppLanguage.ru: 'Поддержка',
+    AppLanguage.ua: 'Підтримка',
+  },
 
   // ── Пресеты цветов ──
   'preset_red': {
@@ -205,6 +225,86 @@ const Map<String, Map<AppLanguage, String>> _strings = {
     AppLanguage.en: 'Bluetooth is turned off. Please enable it.',
     AppLanguage.ru: 'Bluetooth выключен. Пожалуйста, включите его.',
     AppLanguage.ua: 'Bluetooth вимкнено. Будь ласка, увімкніть його.',
+  },
+  'support_feedback_title': {
+    AppLanguage.en: 'Feedback & Support',
+    AppLanguage.ru: 'Обратная связь и поддержка',
+    AppLanguage.ua: 'Зворотній зв\'язок та підтримка',
+  },
+  'support_feedback_desc': {
+    AppLanguage.en: 'Have ideas or found a bug? Send us an email!',
+    AppLanguage.ru: 'Есть идеи или нашли баг? Напишите нам на почту!',
+    AppLanguage.ua: 'Є ідеї або знайшли баг? Напишіть нам на пошту!',
+  },
+  'support_feedback_copied': {
+    AppLanguage.en: 'Email copied to clipboard!',
+    AppLanguage.ru: 'Почта скопирована в буфер обмена!',
+    AppLanguage.ua: 'Пошту скопійовано в буфер обміну!',
+  },
+  'btn_copy': {
+    AppLanguage.en: 'Copy',
+    AppLanguage.ru: 'Копировать',
+    AppLanguage.ua: 'Копіювати',
+  },
+  'btn_write': {
+    AppLanguage.en: 'Write',
+    AppLanguage.ru: 'Написать',
+    AppLanguage.ua: 'Написати',
+  },
+  'effect_speed': {
+    AppLanguage.en: 'Effect Speed',
+    AppLanguage.ru: 'Скорость эффекта',
+    AppLanguage.ua: 'Швидкість ефекту',
+  },
+  'groups_title': {
+    AppLanguage.en: 'Group Control',
+    AppLanguage.ru: 'Групповое управление',
+    AppLanguage.ua: 'Групове керування',
+  },
+  'groups_connected_devices': {
+    AppLanguage.en: 'Connected Devices',
+    AppLanguage.ru: 'Подключенные устройства',
+    AppLanguage.ua: 'Підключені пристрої',
+  },
+  'groups_broadcast_desc': {
+    AppLanguage.en: 'All color, brightness, power, and effect commands are automatically broadcast to all connected devices below.',
+    AppLanguage.ru: 'Все команды цвета, яркости, питания и эффектов автоматически отправляются на все подключенные устройства ниже.',
+    AppLanguage.ua: 'Усі команди кольору, яскравості, живлення та ефектів автоматично надсилаються на всі підключені пристрої нижче.',
+  },
+  'favorites_title': {
+    AppLanguage.en: 'Favorite Colors',
+    AppLanguage.ru: 'Любимые цвета',
+    AppLanguage.ua: 'Улюблені кольори',
+  },
+  'favorites_empty': {
+    AppLanguage.en: 'No favorite colors saved yet.',
+    AppLanguage.ru: 'Любимые цвета еще не сохранены.',
+    AppLanguage.ua: 'Улюблені кольори ще не збережені.',
+  },
+  'btn_save_color': {
+    AppLanguage.en: 'Save Color',
+    AppLanguage.ru: 'Сохранить цвет',
+    AppLanguage.ua: 'Зберегти колір',
+  },
+  'music_sync_title': {
+    AppLanguage.en: 'Music Sync (Beta)',
+    AppLanguage.ru: 'Синхронизация с музыкой (Бета)',
+    AppLanguage.ua: 'Синхронізація з музыкою (Бета)',
+  },
+  'music_sync_desc': {
+    AppLanguage.en: 'Pulses lighting in sync with dynamic virtual audio frequency spectrum.',
+    AppLanguage.ru: 'Пульсация света в синхронизации с динамическим виртуальным аудиоспектром.',
+    AppLanguage.ua: 'Пульсація світла у синхронізації з динамічним віртуальним аудіоспектром.',
+  },
+  'btn_start': {
+    AppLanguage.en: 'Start',
+    AppLanguage.ru: 'Запуск',
+    AppLanguage.ua: 'Запуск',
+  },
+  'btn_stop': {
+    AppLanguage.en: 'Stop',
+    AppLanguage.ru: 'Стоп',
+    AppLanguage.ua: 'Стоп',
   },
 };
 
@@ -388,14 +488,17 @@ class LocalizationThemeStore extends ChangeNotifier {
   // ── Текущие значения ──
   AppLanguage _language = AppLanguage.en;
   AppTheme _appTheme = AppTheme.dark;
+  List<Color> _favoriteColors = [];
 
   // ── Ключи для shared_preferences ──
   static const String _keyLanguage = 'omnilight_language';
   static const String _keyTheme = 'omnilight_theme';
+  static const String _keyFavorites = 'omnilight_favorites';
 
   // ── Геттеры ──
   AppLanguage get language => _language;
   AppTheme get appTheme => _appTheme;
+  List<Color> get favoriteColors => _favoriteColors;
 
   /// Возвращает собранный объект ThemeData + кастомные цвета для текущей темы.
   AppThemeData get currentThemeData => buildThemeData(_appTheme);
@@ -426,6 +529,20 @@ class LocalizationThemeStore extends ChangeNotifier {
       _appTheme = AppTheme.values[themeIndex];
     }
 
+    // Восстанавливаем любимые цвета
+    final favs = prefs.getStringList(_keyFavorites);
+    if (favs != null) {
+      _favoriteColors = favs.map((hex) {
+        try {
+          return Color(int.parse(hex));
+        } catch (_) {
+          return const Color(0xFF007AFF);
+        }
+      }).toList();
+    } else {
+      _favoriteColors = [];
+    }
+
     // Уведомляем слушателей после загрузки
     notifyListeners();
   }
@@ -450,5 +567,29 @@ class LocalizationThemeStore extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyTheme, theme.index);
+  }
+
+  // ─────────────────────────────────────────────
+  // Управление избранными цветами
+  // ─────────────────────────────────────────────
+  Future<void> addFavoriteColor(Color color) async {
+    if (_favoriteColors.any((c) => c.toARGB32() == color.toARGB32())) return;
+    _favoriteColors.add(color);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyFavorites,
+      _favoriteColors.map((c) => c.toARGB32().toString()).toList(),
+    );
+  }
+
+  Future<void> removeFavoriteColor(Color color) async {
+    _favoriteColors.removeWhere((c) => c.toARGB32() == color.toARGB32());
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyFavorites,
+      _favoriteColors.map((c) => c.toARGB32().toString()).toList(),
+    );
   }
 }
