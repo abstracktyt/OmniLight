@@ -150,8 +150,9 @@ abstract class _BaseDriverImpl extends BaseLedDriver {
       }
 
       if (targetService == null) {
+        final serviceUuids = services.map((s) => s.uuid.toString()).join(', ');
         throw Exception(
-          'Сервис ${serviceConfig.serviceUuid} не найден на устройстве',
+          'Сервис ${serviceConfig.serviceUuid} не найден. Доступны: [$serviceUuids]',
         );
       }
 
@@ -166,8 +167,9 @@ abstract class _BaseDriverImpl extends BaseLedDriver {
       }
 
       if (targetChar == null) {
+        final charUuids = targetService.characteristics.map((c) => c.uuid.toString()).join(', ');
         throw Exception(
-          'Характеристика ${serviceConfig.characteristicUuid} не найдена',
+          'Характеристика ${serviceConfig.characteristicUuid} не найдена. Доступны: [$charUuids]',
         );
       }
 
