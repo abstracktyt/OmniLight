@@ -111,35 +111,38 @@ jobs:
         run: flutter build ios --no-codesign --release --verbose
 
       # ────────────────────────────────────────
-      # Шаг 11: Создаём директорию для артефакта и упаковываем сборку
+      # Шаг 11: Упаковываем .app в формат .ipa (Payload-структура)
       # ────────────────────────────────────────
-      - name: 📦 Package build artifact
+      - name: 📦 Package as IPA
         run: |
-          mkdir -p build_output
-          # Копируем .app из DerivedData в папку артефакта
+          PAYLOAD_DIR="${{ runner.temp }}/Payload"
+          mkdir -p "$PAYLOAD_DIR"
+          
+          # Находим собранный .app
           APP_PATH=$(find build/ios -name "*.app" -type d | head -1)
           if [ -n "$APP_PATH" ]; then
             echo "Найден .app: $APP_PATH"
-            cp -r "$APP_PATH" build_output/OmniLight.app
+            cp -r "$APP_PATH" "$PAYLOAD_DIR/OmniLight.app"
           else
-            echo "Предупреждение: .app не найден, упаковываем папку Runner"
-            cp -r build/ios/iphoneos/Runner.app build_output/OmniLight.app || true
+            echo "Предупреждение: .app не найден в build/ios, используем Runner.app"
+            cp -r build/ios/iphoneos/Runner.app "$PAYLOAD_DIR/OmniLight.app" || exit 1
           fi
-          # Архивируем для загрузки
-          cd build_output && zip -r ../OmniLight-iOS-build.zip . && cd ..
-          echo "Артефакт подготовлен: OmniLight-iOS-build.zip"
+          
+          # Архивируем Payload в .ipa
+          cd "${{ runner.temp }}"
+          zip -qr "OmniLight.ipa" "Payload"
+          echo "IPA создана: ${{ runner.temp }}/OmniLight.ipa"
 
       # ────────────────────────────────────────
-      # Шаг 12: Загружаем артефакт в GitHub Actions
-      # Артефакт доступен для скачивания 30 дней
+      # Шаг 12: Загружаем готовый .ipa в GitHub Actions
       # ────────────────────────────────────────
-      - name: ⬆️ Upload build artifact to GitHub
+      - name: ⬆️ Upload IPA artifact to GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: OmniLight-iOS-${{ github.sha }}
-          path: OmniLight-iOS-build.zip
+          name: OmniLight-iOS-IPA-${{ github.run_number }}
+          path: ${{ runner.temp }}/OmniLight.ipa
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
       # ────────────────────────────────────────
       # Шаг 13 (опционально): Публикация Release при теге
