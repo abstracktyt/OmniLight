@@ -12,9 +12,15 @@
 // ============================================================
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, ChangeNotifier;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../drivers/led_driver.dart';
+
+// Проверка: работаем ли мы на мобильной платформе (iOS/Android)
+// BLE flutter_blue_plus не поддерживает Web, Windows, Linux
+bool get _isBleSupported =>
+    !kIsWeb && (Platform.isIOS || Platform.isAndroid);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Перечисление: состояния менеджера (агрегирует BLE + driver state)
@@ -101,6 +107,11 @@ class DeviceManager extends ChangeNotifier {
   // Инициализация: подписка на изменения состояния BLE-адаптера iOS
   // ─────────────────────────────────────────────
   Future<void> init() async {
+    // На Web/Desktop BLE недоступен — пропускаем инициализацию
+    if (!_isBleSupported) {
+      debugPrint('[OmniLight/DeviceManager] BLE недоступен на этой платформе (только iOS/Android)');
+      return;
+    }
     // Слушаем изменения состояния адаптера (включён/выключен/недоступен)
     _adapterSubscription =
         FlutterBluePlus.adapterState.listen(_onAdapterStateChanged);
@@ -149,6 +160,11 @@ class DeviceManager extends ChangeNotifier {
   // Длительность: 10 секунд (стандартный iOS таймаут)
   // ─────────────────────────────────────────────
   Future<void> startScan() async {
+    if (!_isBleSupported) {
+      debugPrint('[OmniLight/DeviceManager] startScan: BLE недоступен на этой платформе');
+      _setError('Близкая связь (BLE) доступна только на мобильных устройствах (iOS/Android)');
+      return;
+    }
     if (_state == DeviceManagerState.scanning) {
       debugPrint('[OmniLight/DeviceManager] Сканирование уже запущено');
       return;

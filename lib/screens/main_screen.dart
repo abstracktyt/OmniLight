@@ -19,6 +19,7 @@
 // ============================================================
 
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -253,7 +254,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(), // iOS-style scroll
+          // BouncingScrollPhysics — только iOS; на Web/Desktop используем ClampingScrollPhysics
+          physics: kIsWeb
+              ? const ClampingScrollPhysics()
+              : const BouncingScrollPhysics(),
           slivers: [
             // ════════════════════════════════════════
             // Шапка: OmniLight by Abstrackt + кнопка настроек
@@ -737,16 +741,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             // HSV колесо
             Padding(
               padding: const EdgeInsets.all(16),
-              child: ColorPicker(
-                pickerColor: _pickerColor,
-                onColorChanged: isConnected ? _onColorChanged : (_) {},
-                colorPickerWidth: double.infinity,
-                pickerAreaHeightPercent: 0.7,
-                enableAlpha: false,
-                displayThumbColor: true,
-                paletteType: PaletteType.hsv,
-                labelTypes: const [],
-                pickerAreaBorderRadius: BorderRadius.circular(12),
+              child: Center(
+                child: SizedBox(
+                  width: 320,
+                  child: ColorPicker(
+                    pickerColor: _pickerColor,
+                    onColorChanged: isConnected ? _onColorChanged : (_) {},
+                    colorPickerWidth: 320,
+                    pickerAreaHeightPercent: 0.75,
+                    enableAlpha: false,
+                    displayThumbColor: true,
+                    paletteType: PaletteType.hsv,
+                    labelTypes: const [],
+                    pickerAreaBorderRadius: BorderRadius.circular(12),
+                    portraitOnly: true,
+                  ),
+                ),
               ),
             ),
           ],
