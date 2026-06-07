@@ -393,7 +393,7 @@ class DeviceManager extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('[OmniLight/DeviceManager] Ошибка подключения к ${discovered.name}: $e');
-      _setError('Не удалось подключиться к ${discovered.name}');
+      _setError('Не удалось подключиться к ${discovered.name}: $e');
     }
   }
 

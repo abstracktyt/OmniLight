@@ -555,6 +555,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   fontWeight: FontWeight.w500,
                   color: themeData.themeData.colorScheme.onSurface,
                 ),
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
