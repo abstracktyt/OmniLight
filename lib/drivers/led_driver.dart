@@ -142,8 +142,7 @@ abstract class _BaseDriverImpl extends BaseLedDriver {
       // Ищем нужный сервис по UUID из конфигурации драйвера
       BluetoothService? targetService;
       for (final service in services) {
-        if (service.uuid.toString().toLowerCase() ==
-            serviceConfig.serviceUuid.toLowerCase()) {
+        if (_compareUuids(service.uuid, serviceConfig.serviceUuid)) {
           targetService = service;
           break;
         }
@@ -159,8 +158,7 @@ abstract class _BaseDriverImpl extends BaseLedDriver {
       // Ищем нужную характеристику по UUID
       BluetoothCharacteristic? targetChar;
       for (final char in targetService.characteristics) {
-        if (char.uuid.toString().toLowerCase() ==
-            serviceConfig.characteristicUuid.toLowerCase()) {
+        if (_compareUuids(char.uuid, serviceConfig.characteristicUuid)) {
           targetChar = char;
           break;
         }
@@ -223,6 +221,20 @@ abstract class _BaseDriverImpl extends BaseLedDriver {
   // ─────────────────────────────────────────────
   void dispose() {
     _stateController.close();
+  }
+
+  bool _compareUuids(Guid guid, String configUuidStr) {
+    if (guid == Guid(configUuidStr)) return true;
+    final clean1 = guid.toString().replaceAll('-', '').toLowerCase();
+    final clean2 = configUuidStr.replaceAll('-', '').toLowerCase();
+    if (clean1 == clean2) return true;
+    if (clean1.length == 4 && clean2.length == 32) {
+      return clean2.startsWith('0000$clean1');
+    }
+    if (clean2.length == 4 && clean1.length == 32) {
+      return clean1.startsWith('0000$clean2');
+    }
+    return false;
   }
 }
 
