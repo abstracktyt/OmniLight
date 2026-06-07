@@ -213,6 +213,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   String _buildStatusText(
     DeviceManagerState state,
     String? deviceName,
+    String? errorMessage,
     LocalizationThemeStore store,
   ) {
     switch (state) {
@@ -229,7 +230,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       case DeviceManagerState.permissionDenied:
         return store.tr('ble_permission_denied');
       case DeviceManagerState.error:
-        return store.tr('status_error');
+        return errorMessage != null
+            ? '${store.tr('status_error')}: $errorMessage'
+            : store.tr('status_error');
       case DeviceManagerState.idle:
         return store.tr('status_disconnected');
     }
@@ -474,6 +477,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final statusText = _buildStatusText(
       manager.state,
       manager.connectedDeviceName,
+      manager.errorMessage,
       store,
     );
     final isScanning = manager.state == DeviceManagerState.scanning;
