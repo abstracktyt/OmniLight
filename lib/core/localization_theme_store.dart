@@ -99,6 +99,11 @@ const Map<String, Map<AppLanguage, String>> _strings = {
     AppLanguage.ru: 'Настройки',
     AppLanguage.ua: 'Налаштування',
   },
+  'support_title': {
+    AppLanguage.en: 'Support & FAQ',
+    AppLanguage.ru: 'Поддержка и FAQ',
+    AppLanguage.ua: 'Підтримка та FAQ',
+  },
 
   // ── Пресеты цветов ──
   'preset_red': {

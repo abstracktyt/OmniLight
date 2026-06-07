@@ -195,6 +195,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────
+  // Открыть модальный лист поддержки и FAQ
+  // ─────────────────────────────────────────────
+  void _openSupport() {
+    _hapticLight();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const _SupportSheet(),
+    );
+  }
+
+  // ─────────────────────────────────────────────
   // Построение строки статуса подключения
   // ─────────────────────────────────────────────
   String _buildStatusText(
@@ -427,6 +440,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+
+          // Кнопка поддержки
+          _GlowIconButton(
+            icon: Icons.help_outline_rounded,
+            themeData: themeData,
+            onTap: _openSupport,
+            tooltip: store.tr('support_title'),
+          ),
+          const SizedBox(width: 8),
 
           // Кнопка настроек
           _GlowIconButton(
@@ -1660,6 +1682,450 @@ class _LangButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Виджет: _SupportSheet
+// Назначение: Модальный лист поддержки, содержащий FAQ и историю подключений.
+// ─────────────────────────────────────────────────────────────────────────────
+class _SupportSheet extends StatelessWidget {
+  const _SupportSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<LocalizationThemeStore>();
+    final manager = context.watch<DeviceManager>();
+    final themeData = store.currentThemeData;
+    final lang = store.language;
+
+    // Функция перевода
+    String t(Map<AppLanguage, String> map) => map[lang] ?? map[AppLanguage.en]!;
+
+    // Заголовки разделов
+    final historyTitle = t({
+      AppLanguage.en: 'Connection History',
+      AppLanguage.ru: 'История подключений',
+      AppLanguage.ua: 'Історія підключень',
+    });
+
+    final faqTitle = t({
+      AppLanguage.en: 'Frequently Asked Questions',
+      AppLanguage.ru: 'Часто задаваемые вопросы',
+      AppLanguage.ua: 'Часті запитання',
+    });
+
+    final emptyHistoryMsg = t({
+      AppLanguage.en: 'No saved devices. Connect to a strip on the main screen to save it here.',
+      AppLanguage.ru: 'История подключений пуста. Подключитесь к ленте на главном экране, и она сохранится здесь.',
+      AppLanguage.ua: 'Історія підключень пуста. Підключіться до стрічки на головному екрані, и вона збережеться тут.',
+    });
+
+    final connectBtnText = t({
+      AppLanguage.en: 'Connect',
+      AppLanguage.ru: 'Подключить',
+      AppLanguage.ua: 'Підключити',
+    });
+
+    final connectedStatusText = t({
+      AppLanguage.en: 'Connected',
+      AppLanguage.ru: 'Подключено',
+      AppLanguage.ua: 'Підключено',
+    });
+
+    final clearHistoryText = t({
+      AppLanguage.en: 'Clear History',
+      AppLanguage.ru: 'Очистить историю',
+      AppLanguage.ua: 'Очистити історію',
+    });
+
+    final faqs = [
+      {
+        'q': {
+          AppLanguage.en: 'Why is my LED strip not showing up in the scan list?',
+          AppLanguage.ru: 'Почему лента не отображается в списке сканирования?',
+          AppLanguage.ua: 'Чому стрічка не відображається у списку сканування?',
+        },
+        'a': {
+          AppLanguage.en: 'iOS hides already connected BLE devices. We have fixed this: connected system devices now show up instantly when you scan! If it still does not appear, ensure Bluetooth is enabled in your phone Settings and you have granted all permissions.',
+          AppLanguage.ru: 'iOS скрывает уже подключенные Bluetooth-устройства. Мы исправили это: теперь подключенные к системе устройства отображаются мгновенно при начале сканирования! Если она все равно не видна, убедитесь, что Bluetooth включен в настройках телефона и приложению даны все разрешения.',
+          AppLanguage.ua: 'iOS приховує вже підключені Bluetooth-пристрої. Ми виправили це: тепер підключені до системи пристрої відображаються миттєво при початку сканування! Якщо вона все одно не відображається, переконайтеся, що Bluetooth увімкнено в налаштуваннях телефону та додатку надано всі дозволи.',
+        }
+      },
+      {
+        'q': {
+          AppLanguage.en: 'What devices are supported?',
+          AppLanguage.ru: 'Какие типы лент поддерживаются?',
+          AppLanguage.ua: 'Які типи стрічок підтримуються?',
+        },
+        'a': {
+          AppLanguage.en: 'OmniLight supports SP110E, ELK-BLEDOM, BLEDOM, LEDBLE, iLinker, QHM-BLS, and other compatible BLE controllers using the custom Driver/Adapter pattern.',
+          AppLanguage.ru: 'OmniLight поддерживает контроллеры SP110E, ELK-BLEDOM, BLEDOM, LEDBLE, iLinker, QHM-BLS и другие совместимые BLE-устройства через архитектуру универсальных драйверов.',
+          AppLanguage.ua: 'OmniLight підтримує контролери SP110E, ELK-BLEDOM, BLEDOM, LEDBLE, iLinker, QHM-BLS та інші сумісні BLE-пристрої через архітектуру універсальних драйверов.',
+        }
+      },
+      {
+        'q': {
+          AppLanguage.en: 'Do I need to pair the device in iOS Bluetooth settings?',
+          AppLanguage.ru: 'Нужно ли сопрягать ленту в настройках Bluetooth iOS?',
+          AppLanguage.ua: 'Чи потрібно зпрягати стрічку в налаштуваннях Bluetooth iOS?',
+        },
+        'a': {
+          AppLanguage.en: 'No, BLE devices connect directly inside the app. Do not pair them in the system settings, as this may lock the device and make it unavailable to the app.',
+          AppLanguage.ru: 'Нет, BLE-устройства подключаются напрямую внутри приложения. Не сопрягайте их в системных настройках телефона, так как это может заблокировать устройство для сторонних приложений.',
+          AppLanguage.ua: 'Ні, BLE-пристрої підключаються безпосередньо всередині додатку. Не зпрягайте їх у системних налаштуваннях телефону, оскільки це може заблокувати пристрій для інших додатків.',
+        }
+      },
+      {
+        'q': {
+          AppLanguage.en: 'The app says connected, but the strip is not lighting up?',
+          AppLanguage.ru: 'Приложение пишет "Подключено", но лента не горит?',
+          AppLanguage.ua: 'Додаток пише "Підключено", але стрічка не світиться?',
+        },
+        'a': {
+          AppLanguage.en: 'Make sure that the controller is powered on (check the physical adapter) and press the "Turn ON" button in the app. Also check if the brightness slider is turned up.',
+          AppLanguage.ru: 'Убедитесь, что на контроллер подано питание (горит ли светодиод на самом блоке), и нажмите кнопку "Включить" в приложении. Также проверьте, что слайдер яркости сдвинут вправо.',
+          AppLanguage.ua: 'Переконайтеся, що на контролер подано живлення (чи світиться світлодіод на самому блоці), та натисніть кнопку "Увімкнути" в додатку. Також перевірте, чи слайдер яскравості зсунутий вправо.',
+        }
+      }
+    ];
+
+    // Вычисляем высоту под шторку (не более 75% экрана)
+    final maxHeight = MediaQuery.of(context).size.height * 0.75;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: themeData.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: themeData.hasGlow
+            ? [
+                BoxShadow(
+                  color: themeData.accentPrimary.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
+                ),
+              ]
+            : [],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Индикатор перетаскивания
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Шапка листа поддержки
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    store.tr('support_title'),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: themeData.themeData.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (manager.connectionHistory.isNotEmpty)
+                    TextButton(
+                      onPressed: () => manager.clearHistory(),
+                      child: Text(
+                        clearHistoryText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Ограничиваем контент по высоте и делаем его прокручиваемым
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxHeight - 100),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── РАЗДЕЛ: История подключений ──
+                      Text(
+                        historyTitle.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: themeData.accentPrimary,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (manager.connectionHistory.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: themeData.themeData.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.08),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            emptyHistoryMsg,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.5),
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: manager.connectionHistory.length,
+                          itemBuilder: (context, index) {
+                            final item = manager.connectionHistory[index];
+                            final id = item['id']!;
+                            final name = item['name']!;
+                            
+                            // Проверяем текущее активное подключение
+                            final isActive = manager.state == DeviceManagerState.connected &&
+                                manager.connectedDeviceName == name;
+                            
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: themeData.themeData.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isActive
+                                      ? themeData.accentPrimary.withValues(alpha: 0.4)
+                                      : themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.08),
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isActive ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded,
+                                    color: isActive ? themeData.accentPrimary : Colors.grey,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: themeData.themeData.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          id,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.4),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  // Кнопка подключения / статус
+                                  if (isActive)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF34C759),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          connectedStatusText,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF34C759),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  else
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                        backgroundColor: themeData.accentPrimary.withValues(alpha: 0.15),
+                                        foregroundColor: themeData.accentPrimary,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(context); // Закрываем шторку
+                                        manager.connectToSavedDevice(id, name);
+                                      },
+                                      child: Text(
+                                        connectBtnText,
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  
+                                  const SizedBox(width: 8),
+                                  // Удалить из истории
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.grey, size: 20),
+                                    onPressed: () => manager.removeFromHistory(id),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // ── РАЗДЕЛ: FAQ ──
+                      Text(
+                        faqTitle.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: themeData.accentPrimary,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      ...faqs.map((faq) {
+                        return _FaqTile(
+                          question: t(faq['q']!),
+                          answer: t(faq['a']!),
+                          themeData: themeData,
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Вспомогательный виджет: кастомный анимируемый FAQ-тайл
+// ─────────────────────────────────────────────────────────────────────────────
+class _FaqTile extends StatefulWidget {
+  final String question;
+  final String answer;
+  final AppThemeData themeData;
+
+  const _FaqTile({
+    required this.question,
+    required this.answer,
+    required this.themeData,
+  });
+
+  @override
+  State<_FaqTile> createState() => _FaqTileState();
+}
+
+class _FaqTileState extends State<_FaqTile> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = widget.themeData;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: themeData.themeData.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _isExpanded
+              ? themeData.accentPrimary.withValues(alpha: 0.4)
+              : themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.08),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            title: Text(
+              widget.question,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: themeData.themeData.colorScheme.onSurface,
+              ),
+            ),
+            trailing: Icon(
+              _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              color: themeData.accentPrimary,
+            ),
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                widget.answer,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.65),
+                  height: 1.4,
+                ),
+              ),
+            ),
+            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
       ),
     );
   }

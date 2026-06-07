@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>OmniLight использует Bluetooth для поиска и управления LED-контроллером.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>OmniLight использует Bluetooth для управления LED-лентой.</string>
 </dict>
 </plist>

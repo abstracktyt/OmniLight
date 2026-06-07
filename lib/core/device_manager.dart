@@ -15,6 +15,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, ChangeNotifier;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../drivers/led_driver.dart';
 
 // Проверка: работаем ли мы на мобильной платформе (iOS/Android)
@@ -99,6 +100,63 @@ class DeviceManager extends ChangeNotifier {
   int get green => _green;
   int get blue => _blue;
 
+  // ── История подключений ──
+  List<Map<String, String>> _connectionHistory = [];
+  List<Map<String, String>> get connectionHistory => _connectionHistory;
+
+  Future<void> _loadHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ids = prefs.getStringList('omnilight_history_ids') ?? [];
+      final names = prefs.getStringList('omnilight_history_names') ?? [];
+      _connectionHistory = [];
+      for (int i = 0; i < ids.length; i++) {
+        if (i < names.length) {
+          _connectionHistory.add({'id': ids[i], 'name': names[i]});
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[OmniLight/DeviceManager] Ошибка загрузки истории: $e');
+    }
+  }
+
+  Future<void> _addToHistory(String id, String name) async {
+    // Проверяем, есть ли уже в истории, и удаляем дубликат
+    _connectionHistory.removeWhere((item) => item['id'] == id);
+    _connectionHistory.insert(0, {'id': id, 'name': name});
+    
+    // Ограничиваем историю 10 устройствами
+    if (_connectionHistory.length > 10) {
+      _connectionHistory = _connectionHistory.sublist(0, 10);
+    }
+    
+    await _saveHistory();
+  }
+
+  Future<void> _saveHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ids = _connectionHistory.map((item) => item['id']!).toList();
+      final names = _connectionHistory.map((item) => item['name']!).toList();
+      await prefs.setStringList('omnilight_history_ids', ids);
+      await prefs.setStringList('omnilight_history_names', names);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[OmniLight/DeviceManager] Ошибка сохранения истории: $e');
+    }
+  }
+
+  Future<void> clearHistory() async {
+    _connectionHistory.clear();
+    await _saveHistory();
+  }
+
+  Future<void> removeFromHistory(String id) async {
+    _connectionHistory.removeWhere((item) => item['id'] == id);
+    await _saveHistory();
+  }
+
   // ── Внутренние подписки ──
   StreamSubscription<List<ScanResult>>? _scanSubscription;
   StreamSubscription<BluetoothAdapterState>? _adapterSubscription;
@@ -107,6 +165,7 @@ class DeviceManager extends ChangeNotifier {
   // Инициализация: подписка на изменения состояния BLE-адаптера iOS
   // ─────────────────────────────────────────────
   Future<void> init() async {
+    await _loadHistory();
     // На Web/Desktop BLE недоступен — пропускаем инициализацию
     if (!_isBleSupported) {
       debugPrint('[OmniLight/DeviceManager] BLE недоступен на этой платформе (только iOS/Android)');
@@ -177,6 +236,38 @@ class DeviceManager extends ChangeNotifier {
     // Очищаем предыдущие результаты
     _discoveredDevices.clear();
     _setState(DeviceManagerState.scanning);
+
+    // Сначала опрашиваем устройства, которые уже подключены к системе (iOS Auto-Connect или другая программа)
+    try {
+      final systemDevices = await FlutterBluePlus.systemDevices(
+        [
+          Guid('0000fff0-0000-1000-8000-00805f9b34fb'), // BLEDOM
+          Guid('0000ffd0-0000-1000-8000-00805f9b34fb'), // SP110E
+        ],
+      );
+      for (final device in systemDevices) {
+        final deviceName = device.platformName.isNotEmpty
+            ? device.platformName
+            : 'ELK-BLEDOM';
+        
+        final matchedDriver = _matchDriver(deviceName);
+        
+        final exists = _discoveredDevices.any((d) => d.device.remoteId == device.remoteId);
+        if (!exists) {
+          _discoveredDevices.add(DiscoveredDevice(
+            device: device,
+            name: deviceName,
+            rssi: -55,
+            matchedDriver: matchedDriver,
+          ));
+        }
+      }
+      if (_discoveredDevices.isNotEmpty) {
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[OmniLight/DeviceManager] Ошибка при получении подключенных к системе устройств: $e');
+    }
 
     try {
       // Подписываемся на поток результатов сканирования
@@ -295,6 +386,7 @@ class DeviceManager extends ChangeNotifier {
       _activeDriver = driver;
       _connectedDeviceName = discovered.name;
       _setState(DeviceManagerState.connected);
+      await _addToHistory(discovered.device.remoteId.toString(), discovered.name);
       debugPrint(
         '[OmniLight/DeviceManager] Подключено: ${discovered.name} '
         'через ${driver.driverName}',
@@ -303,6 +395,26 @@ class DeviceManager extends ChangeNotifier {
       debugPrint('[OmniLight/DeviceManager] Ошибка подключения к ${discovered.name}: $e');
       _setError('Не удалось подключиться к ${discovered.name}');
     }
+  }
+
+  // ─────────────────────────────────────────────
+  // Подключиться к сохранённому устройству из истории
+  // ─────────────────────────────────────────────
+  Future<void> connectToSavedDevice(String id, String name) async {
+    if (!_isBleSupported) {
+      debugPrint('[OmniLight/DeviceManager] connectToSavedDevice: BLE недоступен');
+      return;
+    }
+    await stopScan();
+    final device = BluetoothDevice.fromId(id);
+    final matchedDriver = _matchDriver(name);
+    final discovered = DiscoveredDevice(
+      device: device,
+      name: name,
+      rssi: -50,
+      matchedDriver: matchedDriver,
+    );
+    await connectToDevice(discovered);
   }
 
   // ─────────────────────────────────────────────
