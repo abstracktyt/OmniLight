@@ -632,7 +632,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          if (isScanning || manager.isConnecting)
+          if ((isScanning && !isConnected) || manager.isConnecting)
             SizedBox(
               width: 14,
               height: 14,
