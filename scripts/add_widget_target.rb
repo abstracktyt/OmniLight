@@ -39,6 +39,18 @@ unless File.exist?(plist_path)
     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
     <plist version="1.0">
     <dict>
+      <key>CFBundleIdentifier</key>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+      <key>CFBundleName</key>
+      <string>$(PRODUCT_NAME)</string>
+      <key>CFBundleDisplayName</key>
+      <string>OmniLight Widget</string>
+      <key>CFBundleShortVersionString</key>
+      <string>1.0</string>
+      <key>CFBundleVersion</key>
+      <string>1</string>
+      <key>CFBundlePackageType</key>
+      <string>XPC!</string>
       <key>NSExtension</key>
       <dict>
         <key>NSExtensionPointIdentifier</key>
