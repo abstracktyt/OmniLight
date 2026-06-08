@@ -21,202 +21,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_widget/home_widget.dart';
 import '../drivers/led_driver.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Класс: AppEffect
-// Назначение: Описание эффекта с поддержкой мультиязычности и кодов
-//             эффектов для разных контроллеров.
-// ─────────────────────────────────────────────────────────────────────────────
-enum EffectCategory {
-  colorFlow,
-  strobe,
-  pulse,
-  nature,
-  special
-}
-
-class AppEffect {
-  final String id;
-  final Map<String, String> names;
-  final EffectCategory category;
-  final List<Color> previewColors;
-
-  const AppEffect({
-    required this.id,
-    required this.names,
-    required this.category,
-    required this.previewColors,
-  });
-}
-
-const List<AppEffect> appEffects = [
-  // COLOR FLOW
-  AppEffect(
-    id: 'rainbow_flow',
-    names: {'en': 'Rainbow Flow', 'ru': 'Радужный перелив', 'ua': 'Радужний перелив'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.blue, Colors.purple],
-  ),
-  AppEffect(
-    id: 'rainbow_chase',
-    names: {'en': 'Rainbow Chase', 'ru': 'Радужная погоня', 'ua': 'Радужна погоня'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.purple, Colors.blue, Colors.cyan],
-  ),
-  AppEffect(
-    id: 'sunset_fade',
-    names: {'en': 'Sunset Fade', 'ru': 'Закатный градиент', 'ua': 'Західний градієнт'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.pink, Colors.pinkAccent, Colors.orange],
-  ),
-  AppEffect(
-    id: 'pastel_flow',
-    names: {'en': 'Pastel Flow', 'ru': 'Пастельный перелив', 'ua': 'Пастельний перелив'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Color(0xFFFFB3BA), Color(0xFFFFDFBA), Color(0xFFFFFFBA), Color(0xFFBAFFC9), Color(0xFFBAE1FF)],
-  ),
-  AppEffect(
-    id: 'toxic_flow',
-    names: {'en': 'Toxic Flow', 'ru': 'Кислотный перелив', 'ua': 'Кислотний перелив'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.greenAccent, Colors.yellowAccent],
-  ),
-  AppEffect(
-    id: 'neon_night',
-    names: {'en': 'Neon Cyberpunk', 'ru': 'Неоновый киберпанк', 'ua': 'Неоновий кіберпанк'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.purpleAccent, Colors.blue, Colors.cyan],
-  ),
-  AppEffect(
-    id: 'rgb_fade',
-    names: {'en': 'RGB Fade', 'ru': 'Плавный RGB', 'ua': 'Плавний RGB'},
-    category: EffectCategory.colorFlow,
-    previewColors: [Colors.red, Colors.green, Colors.blue],
-  ),
-
-  // STROBE
-  AppEffect(
-    id: 'rainbow_strobe',
-    names: {'en': 'Rainbow Strobe', 'ru': 'Радужный стробоскоп', 'ua': 'Радужний стробоскоп'},
-    category: EffectCategory.strobe,
-    previewColors: [Colors.red, Colors.green, Colors.blue],
-  ),
-  AppEffect(
-    id: 'white_strobe',
-    names: {'en': 'White Strobe', 'ru': 'Белый стробоскоп', 'ua': 'Білий стробоскоп'},
-    category: EffectCategory.strobe,
-    previewColors: [Colors.white, Colors.black],
-  ),
-  AppEffect(
-    id: 'police_double',
-    names: {'en': 'Police Double Strobe', 'ru': 'Двойной полицейский строб', 'ua': 'Подвійний поліцейський строб'},
-    category: EffectCategory.strobe,
-    previewColors: [Colors.red, Colors.blue],
-  ),
-  AppEffect(
-    id: 'thunderstorm',
-    names: {'en': 'Thunderstorm', 'ru': 'Гроза', 'ua': 'Гроза'},
-    category: EffectCategory.strobe,
-    previewColors: [Colors.deepPurple, Colors.white],
-  ),
-  AppEffect(
-    id: 'neon_flash',
-    names: {'en': 'Neon Flash', 'ru': 'Неоновые вспышки', 'ua': 'Неонові спалахи'},
-    category: EffectCategory.strobe,
-    previewColors: [Colors.pinkAccent, Colors.cyanAccent],
-  ),
-
-  // PULSING
-  AppEffect(
-    id: 'red_pulse',
-    names: {'en': 'Red Pulse', 'ru': 'Красный пульс', 'ua': 'Червоний пульс'},
-    category: EffectCategory.pulse,
-    previewColors: [Colors.red, Colors.redAccent],
-  ),
-  AppEffect(
-    id: 'green_pulse',
-    names: {'en': 'Green Pulse', 'ru': 'Зеленый пульс', 'ua': 'Зелений пульс'},
-    category: EffectCategory.pulse,
-    previewColors: [Colors.green, Colors.greenAccent],
-  ),
-  AppEffect(
-    id: 'blue_pulse',
-    names: {'en': 'Blue Pulse', 'ru': 'Синий пульс', 'ua': 'Синій пульс'},
-    category: EffectCategory.pulse,
-    previewColors: [Colors.blue, Colors.blueAccent],
-  ),
-  AppEffect(
-    id: 'white_breath',
-    names: {'en': 'White Breath', 'ru': 'Белое дыхание', 'ua': 'Біле дихання'},
-    category: EffectCategory.pulse,
-    previewColors: [Colors.white, Colors.grey],
-  ),
-  AppEffect(
-    id: 'heartbeat',
-    names: {'en': 'Heartbeat', 'ru': 'Сердцебиение', 'ua': 'Серцебиття'},
-    category: EffectCategory.pulse,
-    previewColors: [Colors.red, Colors.black],
-  ),
-
-  // NATURE
-  AppEffect(
-    id: 'fire_glow',
-    names: {'en': 'Fire Glow', 'ru': 'Пламя огня', 'ua': 'Полум\'я вогню'},
-    category: EffectCategory.nature,
-    previewColors: [Colors.red, Colors.orange, Colors.yellow],
-  ),
-  AppEffect(
-    id: 'ice_cold',
-    names: {'en': 'Ice Cold', 'ru': 'Холодный лед', 'ua': 'Холодний лід'},
-    category: EffectCategory.nature,
-    previewColors: [Colors.cyan, Colors.blue, Colors.white],
-  ),
-  AppEffect(
-    id: 'forest_breath',
-    names: {'en': 'Forest Breath', 'ru': 'Дыхание леса', 'ua': 'Дихання лісу'},
-    category: EffectCategory.nature,
-    previewColors: [Colors.green, Colors.lime, Colors.teal],
-  ),
-  AppEffect(
-    id: 'aurora',
-    names: {'en': 'Aurora Borealis', 'ru': 'Полярное сияние', 'ua': 'Полярне сяйво'},
-    category: EffectCategory.nature,
-    previewColors: [Colors.deepPurple, Colors.teal, Colors.blue],
-  ),
-
-  // SPECIAL
-  AppEffect(
-    id: 'police',
-    names: {'en': 'Police Siren', 'ru': 'Сирена полиции', 'ua': 'Сирена поліції'},
-    category: EffectCategory.special,
-    previewColors: [Colors.red, Colors.blue],
-  ),
-  AppEffect(
-    id: 'christmas',
-    names: {'en': 'Christmas Holiday', 'ru': 'Новогодний перелив', 'ua': 'Новорічний перелив'},
-    category: EffectCategory.special,
-    previewColors: [Colors.red, Colors.green],
-  ),
-  AppEffect(
-    id: 'gold_rush',
-    names: {'en': 'Gold Rush', 'ru': 'Золотая лихорадка', 'ua': 'Золота лихоманка'},
-    category: EffectCategory.special,
-    previewColors: [Color(0xFFFFD700), Color(0xFFDAA520)],
-  ),
-  AppEffect(
-    id: 'valentine',
-    names: {'en': 'Valentine', 'ru': 'День Святого Валентина', 'ua': 'День Святого Валентина'},
-    category: EffectCategory.special,
-    previewColors: [Colors.pink, Colors.redAccent],
-  ),
-];
-
 // Проверка: работаем ли мы на мобильной платформе (iOS/Android)
 // BLE flutter_blue_plus не поддерживает Web, Windows, Linux
 bool get _isBleSupported =>
     !kIsWeb && (Platform.isIOS || Platform.isAndroid);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Перечисление: состояния менеджера (агрегирует BLE + driver state)
+// Перечисление: Состояния менеджера
 // ─────────────────────────────────────────────────────────────────────────────
 enum DeviceManagerState {
   bleUnavailable,  // BLE не поддерживается устройством
@@ -249,9 +60,9 @@ class DiscoveredDevice {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Класс: DeviceManager
-// Назначение: Центральный провайдер для управления BLE-сессией.
-//             Реализует ChangeNotifier для реактивного UI через Provider.
+// Менеджер устройств (Provider)
+// Назначение: Центральный контроллер состояния Bluetooth-соединений.
+//             Хранит список найденных устройств, активные подключения и историю.
 // ─────────────────────────────────────────────────────────────────────────────
 class DeviceManager extends ChangeNotifier {
   // ── Реестр доступных драйверов (добавляйте новые сюда) ──

@@ -24,6 +24,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:home_widget/home_widget.dart';
 import '../core/localization_theme_store.dart';
 import '../core/device_manager.dart';
+import '../core/effects_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Константы: базовые пресеты цветов
@@ -1444,7 +1445,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         ? 'en'
         : (store.language == AppLanguage.ru ? 'ru' : 'ua');
 
-    final filteredEffects = appEffects.where((e) {
+    final allEffects = EffectsRepository.getAllEffects();
+    final filteredEffects = allEffects.where((e) {
       final query = _effectSearchQuery.toLowerCase();
       if (query.isEmpty) return true;
       final nameEn = e.names['en']?.toLowerCase() ?? '';
