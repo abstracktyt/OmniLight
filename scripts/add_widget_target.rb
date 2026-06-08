@@ -48,9 +48,9 @@ unless File.exist?(plist_path)
       <key>CFBundleDisplayName</key>
       <string>OmniLight Widget</string>
       <key>CFBundleShortVersionString</key>
-      <string>1.0</string>
+      <string>$(FLUTTER_BUILD_NAME)</string>
       <key>CFBundleVersion</key>
-      <string>1</string>
+      <string>$(FLUTTER_BUILD_NUMBER)</string>
       <key>CFBundlePackageType</key>
       <string>XPC!</string>
       <key>NSExtension</key>
@@ -75,7 +75,10 @@ widget_target.build_configurations.each do |config|
   config.build_settings['TARGETED_DEVICE_FAMILY'] = "1,2" # iPhone & iPad
   config.build_settings['SWIFT_VERSION'] = "5.0"
   config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = "14.0"
-  config.build_settings['PRODUCT_NAME'] = "$(TARGET_NAME)"
+  config.build_settings['PRODUCT_NAME'] = target_name
+  
+  generated_xcconfig = project.files.find { |f| f.path && f.path.include?('Generated.xcconfig') }
+  config.base_configuration_reference = generated_xcconfig if generated_xcconfig
 end
 
 # Make Runner depend on OmniLightWidget
