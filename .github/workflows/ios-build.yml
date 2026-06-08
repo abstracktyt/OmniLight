@@ -104,7 +104,15 @@ jobs:
         working-directory: .
 
       # ────────────────────────────────────────
-      # Шаг 10: Сборка iOS без подписи кода
+      # Шаг 10: Настраиваем Widget Extension через Ruby
+      # ────────────────────────────────────────
+      - name: 🛠️ Configure iOS Widget Target
+        run: |
+          gem install xcodeproj
+          ruby scripts/add_widget_target.rb
+
+      # ────────────────────────────────────────
+      # Шаг 11: Сборка iOS без подписи кода
       # --no-codesign: подходит для CI-артефактов (не для App Store)
       # Для подписи требуется добавить сертификаты и provisioning profiles
       # ────────────────────────────────────────
