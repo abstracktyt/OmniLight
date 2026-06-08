@@ -1376,6 +1376,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               onChanged: (val) {
                 setState(() => _effectSpeed = val);
               },
+              onChangeEnd: (val) {
+                final manager = context.read<DeviceManager>();
+                manager.updateEffectSpeed(val.toInt());
+              },
             ),
           ),
         ],
@@ -2109,7 +2113,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                store.tr('support_feedback_copied'),
+                                store.tr('discord_copied'),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,

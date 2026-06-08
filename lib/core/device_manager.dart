@@ -247,6 +247,8 @@ class DeviceManager extends ChangeNotifier {
   // ── Software Effects ──
   Timer? _softwareEffectTimer;
   int _softwareEffectStep = 0;
+  String? _currentEffectId;
+  String? get currentEffectId => _currentEffectId;
 
   // ── История подключений ──
   List<Map<String, String>> _connectionHistory = [];
@@ -714,11 +716,18 @@ class DeviceManager extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────
-  // Команда: установить динамический эффект
+  // Установка эффекта
   // ─────────────────────────────────────────────
   Future<void> setEffect(String effectId, int speed) async {
     _softwareEffectTimer?.cancel();
+    _currentEffectId = effectId;
     _startSoftwareEffect(effectId, speed);
+  }
+
+  void updateEffectSpeed(int speed) {
+    if (_currentEffectId != null) {
+      setEffect(_currentEffectId!, speed);
+    }
   }
 
   void _startSoftwareEffect(String effectId, int speed) {

@@ -241,6 +241,11 @@ const Map<String, Map<AppLanguage, String>> _strings = {
     AppLanguage.ru: 'Почта скопирована в буфер обмена!',
     AppLanguage.ua: 'Пошту скопійовано в буфер обміну!',
   },
+  'discord_copied': {
+    AppLanguage.en: 'Discord link copied to clipboard!',
+    AppLanguage.ru: 'Ссылка на Discord скопирована!',
+    AppLanguage.ua: 'Посилання на Discord скопійовано!',
+  },
   'btn_copy': {
     AppLanguage.en: 'Copy',
     AppLanguage.ru: 'Копировать',
