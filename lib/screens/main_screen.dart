@@ -216,20 +216,34 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Future<void> _pickAudioFile() async {
     _hapticMedium();
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.audio,
-    );
+    try {
+      FilePickerResult? result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['mp3', 'wav', 'aac', 'm4a', 'flac'],
+      );
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      final name = result.files.single.name;
-      setState(() {
-        _selectedAudioFileName = name;
-      });
-      await _audioPlayer.setSourceDeviceFile(path);
-      
-      if (_isMusicSyncing) {
-        _stopMusicSync();
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final name = result.files.single.name;
+        setState(() {
+          _selectedAudioFileName = name;
+        });
+        await _audioPlayer.setSourceDeviceFile(path);
+        
+        if (_isMusicSyncing) {
+          _stopMusicSync();
+        }
+      }
+    } catch (e) {
+      debugPrint('[OmniLight/Audio] Error picking file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking file: $e'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }
