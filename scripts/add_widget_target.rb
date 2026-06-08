@@ -15,8 +15,9 @@ end
 puts "Creating target #{target_name}..."
 
 # Create new app extension target
-widget_target = project.new_target(:application_extension, target_name, :ios, '14.0')
+widget_target = project.new_target(:app_extension, target_name, :ios, '14.0')
 widget_target.product_name = target_name
+widget_target.product_type = 'com.apple.product-type.app-extension'
 
 # Add files to group
 widget_group = project.main_group.find_subpath(target_name, true)
