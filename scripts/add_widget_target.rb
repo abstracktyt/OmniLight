@@ -73,6 +73,15 @@ embed_phase = main_target.new_copy_files_build_phase('Embed App Extensions')
 embed_phase.dst_subfolder_spec = '13' # Plugins
 embed_phase.add_file_reference(widget_target.product_reference, true) # Code sign on copy
 
+# Fix Dependency Cycle: Move Embed phase before any Script phases (e.g. Thin Binary)
+main_target.build_phases.delete(embed_phase)
+first_script_index = main_target.build_phases.index { |p| p.isa == 'PBXShellScriptBuildPhase' }
+if first_script_index
+  main_target.build_phases.insert(first_script_index, embed_phase)
+else
+  main_target.build_phases << embed_phase
+end
+
 # Workaround for Frameworks (since it's a widget, SwiftUI and WidgetKit are needed)
 frameworks_phase = widget_target.frameworks_build_phase
 frameworks_phase.add_file_reference(project.frameworks_group.new_file('WidgetKit.framework'))
