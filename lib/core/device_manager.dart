@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:home_widget/home_widget.dart';
 import '../drivers/led_driver.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -638,6 +639,7 @@ class DeviceManager extends ChangeNotifier {
         '[OmniLight/DeviceManager] Подключено: ${discovered.name} '
         'через ${driver.driverName} (всего подключено: ${_activeDrivers.length})',
       );
+      _updateConnectionStatus();
     } catch (e) {
       _isConnecting = false;
       debugPrint('[OmniLight/DeviceManager] Ошибка подключения к ${discovered.name}: $e');
@@ -645,6 +647,33 @@ class DeviceManager extends ChangeNotifier {
       if (_activeDrivers.isNotEmpty) {
         _setState(DeviceManagerState.connected);
       }
+      _updateConnectionStatus();
+    }
+  }
+
+  void _updateConnectionStatus() {
+    bool hasConnected = false;
+    for (var driver in _activeDrivers.values) {
+      if (driver.isConnected) {
+        hasConnected = true;
+        break;
+      }
+    }
+    
+    _updateHomeWidgetStatus(hasConnected);
+    notifyListeners();
+  }
+
+  Future<void> _updateHomeWidgetStatus(bool hasConnected) async {
+    try {
+      final status = hasConnected ? "Подключено: ${connectedStrips.length}" : "Отключено";
+      await HomeWidget.saveWidgetData<String>('widget_status', status);
+      await HomeWidget.updateWidget(
+        name: 'HomeWidgetProvider',
+        iOSName: 'OmniLightWidget',
+      );
+    } catch (e) {
+      debugPrint("Error updating widget: \$e");
     }
   }
 
@@ -688,6 +717,7 @@ class DeviceManager extends ChangeNotifier {
         _connectedDeviceName = _connectedStrips.last.name;
         notifyListeners();
       }
+      _updateConnectionStatus();
     }
   }
 
@@ -706,6 +736,7 @@ class DeviceManager extends ChangeNotifier {
     _activeDriver = null;
     _connectedDeviceName = null;
     _setState(DeviceManagerState.idle);
+    _updateConnectionStatus();
   }
 
   // ─────────────────────────────────────────────

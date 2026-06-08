@@ -29,6 +29,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   audioplayers: ^6.7.1
   file_picker: ^11.0.2
+  audio_session: ^0.2.3
+  home_widget: ^0.9.3
 
 dev_dependencies:
   flutter_test:

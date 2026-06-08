@@ -20,6 +20,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:audio_session/audio_session.dart';
+import 'package:home_widget/home_widget.dart';
 import '../core/localization_theme_store.dart';
 import '../core/device_manager.dart';
 
@@ -109,6 +111,37 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         _stopMusicSync();
       }
     });
+
+    _initAudioSession();
+    _initHomeWidget();
+  }
+
+  Future<void> _initAudioSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+    } catch (e) {
+      debugPrint("Error initializing audio session: \$e");
+    }
+  }
+
+  void _initHomeWidget() {
+    HomeWidget.setAppGroupId('group.com.abstrackt.omnilight'); // For iOS if ever used
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_checkForWidgetLaunch);
+    HomeWidget.widgetClicked.listen(_checkForWidgetLaunch);
+  }
+
+  void _checkForWidgetLaunch(Uri? uri) {
+    if (uri != null && uri.scheme == 'omnilight' && uri.host == 'color') {
+      final hex = uri.queryParameters['hex'];
+      if (hex != null) {
+        final color = Color(int.parse("FF\$hex", radix: 16));
+        setState(() => _pickerColor = color);
+        // Apply color
+        final manager = context.read<DeviceManager>();
+        manager.setRgb(color.red, color.green, color.blue);
+      }
+    }
   }
 
   @override
