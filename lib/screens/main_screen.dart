@@ -1933,9 +1933,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     Clipboard.setData(ClipboardData(text: email));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(store.tr('support_feedback_copied')),
-                        duration: const Duration(seconds: 2),
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                store.tr('support_feedback_copied'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        margin: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         backgroundColor: themeData.accentPrimary,
+                        elevation: 8,
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   },
@@ -1984,9 +2003,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     Clipboard.setData(const ClipboardData(text: 'http://dsc.gg/OmniLight'));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(store.tr('support_feedback_copied')),
-                        duration: const Duration(seconds: 2),
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                store.tr('support_feedback_copied'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        margin: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         backgroundColor: const Color(0xFF5865F2),
+                        elevation: 8,
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   },
