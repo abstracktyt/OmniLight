@@ -25,128 +25,187 @@ import '../drivers/led_driver.dart';
 // Назначение: Описание эффекта с поддержкой мультиязычности и кодов
 //             эффектов для разных контроллеров.
 // ─────────────────────────────────────────────────────────────────────────────
+enum EffectCategory {
+  colorFlow,
+  strobe,
+  pulse,
+  nature,
+  special
+}
+
 class AppEffect {
   final String id;
   final Map<String, String> names;
-  final Map<String, int> driverEffectIds;
+  final EffectCategory category;
   final List<Color> previewColors;
 
   const AppEffect({
     required this.id,
     required this.names,
-    required this.driverEffectIds,
+    required this.category,
     required this.previewColors,
   });
 }
 
 const List<AppEffect> appEffects = [
+  // COLOR FLOW
   AppEffect(
     id: 'rainbow_flow',
     names: {'en': 'Rainbow Flow', 'ru': 'Радужный перелив', 'ua': 'Радужний перелив'},
-    driverEffectIds: {'ELK-BLEDOM': 138, 'SP110E': 1},
+    category: EffectCategory.colorFlow,
     previewColors: [Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.blue, Colors.purple],
-  ),
-  AppEffect(
-    id: 'rainbow_strobe',
-    names: {'en': 'Rainbow Strobe', 'ru': 'Радужный стробоскоп', 'ua': 'Радужний стробоскоп'},
-    driverEffectIds: {'ELK-BLEDOM': 146, 'SP110E': 2},
-    previewColors: [Colors.red, Colors.green, Colors.blue],
   ),
   AppEffect(
     id: 'rainbow_chase',
     names: {'en': 'Rainbow Chase', 'ru': 'Радужная погоня', 'ua': 'Радужна погоня'},
-    driverEffectIds: {'ELK-BLEDOM': 154, 'SP110E': 3},
+    category: EffectCategory.colorFlow,
     previewColors: [Colors.purple, Colors.blue, Colors.cyan],
-  ),
-  AppEffect(
-    id: 'fire_glow',
-    names: {'en': 'Fire Glow', 'ru': 'Пламя огня', 'ua': 'Полум\'я вогню'},
-    driverEffectIds: {'ELK-BLEDOM': 131, 'SP110E': 4},
-    previewColors: [Colors.red, Colors.orange, Colors.yellow],
-  ),
-  AppEffect(
-    id: 'ice_cold',
-    names: {'en': 'Ice Cold', 'ru': 'Холодный лед', 'ua': 'Холодний лід'},
-    driverEffectIds: {'ELK-BLEDOM': 132, 'SP110E': 5},
-    previewColors: [Colors.cyan, Colors.blue, Colors.white],
-  ),
-  AppEffect(
-    id: 'forest_breath',
-    names: {'en': 'Forest Breath', 'ru': 'Дыхание леса', 'ua': 'Дихання лісу'},
-    driverEffectIds: {'ELK-BLEDOM': 129, 'SP110E': 6},
-    previewColors: [Colors.green, Colors.lime, Colors.teal],
   ),
   AppEffect(
     id: 'sunset_fade',
     names: {'en': 'Sunset Fade', 'ru': 'Закатный градиент', 'ua': 'Західний градієнт'},
-    driverEffectIds: {'ELK-BLEDOM': 133, 'SP110E': 7},
+    category: EffectCategory.colorFlow,
     previewColors: [Colors.pink, Colors.pinkAccent, Colors.orange],
+  ),
+  AppEffect(
+    id: 'pastel_flow',
+    names: {'en': 'Pastel Flow', 'ru': 'Пастельный перелив', 'ua': 'Пастельний перелив'},
+    category: EffectCategory.colorFlow,
+    previewColors: [Color(0xFFFFB3BA), Color(0xFFFFDFBA), Color(0xFFFFFFBA), Color(0xFFBAFFC9), Color(0xFFBAE1FF)],
+  ),
+  AppEffect(
+    id: 'toxic_flow',
+    names: {'en': 'Toxic Flow', 'ru': 'Кислотный перелив', 'ua': 'Кислотний перелив'},
+    category: EffectCategory.colorFlow,
+    previewColors: [Colors.greenAccent, Colors.yellowAccent],
   ),
   AppEffect(
     id: 'neon_night',
     names: {'en': 'Neon Cyberpunk', 'ru': 'Неоновый киберпанк', 'ua': 'Неоновий кіберпанк'},
-    driverEffectIds: {'ELK-BLEDOM': 137, 'SP110E': 8},
+    category: EffectCategory.colorFlow,
     previewColors: [Colors.purpleAccent, Colors.blue, Colors.cyan],
   ),
   AppEffect(
-    id: 'white_breath',
-    names: {'en': 'White Breath', 'ru': 'Белое дыхание', 'ua': 'Біле дихання'},
-    driverEffectIds: {'ELK-BLEDOM': 134, 'SP110E': 9},
-    previewColors: [Colors.white, Colors.grey, Colors.white70],
+    id: 'rgb_fade',
+    names: {'en': 'RGB Fade', 'ru': 'Плавный RGB', 'ua': 'Плавний RGB'},
+    category: EffectCategory.colorFlow,
+    previewColors: [Colors.red, Colors.green, Colors.blue],
   ),
+
+  // STROBE
+  AppEffect(
+    id: 'rainbow_strobe',
+    names: {'en': 'Rainbow Strobe', 'ru': 'Радужный стробоскоп', 'ua': 'Радужний стробоскоп'},
+    category: EffectCategory.strobe,
+    previewColors: [Colors.red, Colors.green, Colors.blue],
+  ),
+  AppEffect(
+    id: 'white_strobe',
+    names: {'en': 'White Strobe', 'ru': 'Белый стробоскоп', 'ua': 'Білий стробоскоп'},
+    category: EffectCategory.strobe,
+    previewColors: [Colors.white, Colors.black],
+  ),
+  AppEffect(
+    id: 'police_double',
+    names: {'en': 'Police Double Strobe', 'ru': 'Двойной полицейский строб', 'ua': 'Подвійний поліцейський строб'},
+    category: EffectCategory.strobe,
+    previewColors: [Colors.red, Colors.blue],
+  ),
+  AppEffect(
+    id: 'thunderstorm',
+    names: {'en': 'Thunderstorm', 'ru': 'Гроза', 'ua': 'Гроза'},
+    category: EffectCategory.strobe,
+    previewColors: [Colors.deepPurple, Colors.white],
+  ),
+  AppEffect(
+    id: 'neon_flash',
+    names: {'en': 'Neon Flash', 'ru': 'Неоновые вспышки', 'ua': 'Неонові спалахи'},
+    category: EffectCategory.strobe,
+    previewColors: [Colors.pinkAccent, Colors.cyanAccent],
+  ),
+
+  // PULSING
   AppEffect(
     id: 'red_pulse',
     names: {'en': 'Red Pulse', 'ru': 'Красный пульс', 'ua': 'Червоний пульс'},
-    driverEffectIds: {'ELK-BLEDOM': 128, 'SP110E': 10},
+    category: EffectCategory.pulse,
     previewColors: [Colors.red, Colors.redAccent],
   ),
   AppEffect(
     id: 'green_pulse',
     names: {'en': 'Green Pulse', 'ru': 'Зеленый пульс', 'ua': 'Зелений пульс'},
-    driverEffectIds: {'ELK-BLEDOM': 129, 'SP110E': 11},
+    category: EffectCategory.pulse,
     previewColors: [Colors.green, Colors.greenAccent],
   ),
   AppEffect(
     id: 'blue_pulse',
     names: {'en': 'Blue Pulse', 'ru': 'Синий пульс', 'ua': 'Синій пульс'},
-    driverEffectIds: {'ELK-BLEDOM': 130, 'SP110E': 12},
+    category: EffectCategory.pulse,
     previewColors: [Colors.blue, Colors.blueAccent],
   ),
   AppEffect(
-    id: 'white_strobe',
-    names: {'en': 'White Strobe', 'ru': 'Белый стробоскоп', 'ua': 'Білий стробоскоп'},
-    driverEffectIds: {'ELK-BLEDOM': 145, 'SP110E': 13},
-    previewColors: [Colors.white, Colors.white60],
+    id: 'white_breath',
+    names: {'en': 'White Breath', 'ru': 'Белое дыхание', 'ua': 'Біле дихання'},
+    category: EffectCategory.pulse,
+    previewColors: [Colors.white, Colors.grey],
   ),
   AppEffect(
-    id: 'christmas',
-    names: {'en': 'Christmas Holiday', 'ru': 'Новогодний перелив', 'ua': 'Новорічний перелив'},
-    driverEffectIds: {'ELK-BLEDOM': 135, 'SP110E': 14},
-    previewColors: [Colors.red, Colors.green],
+    id: 'heartbeat',
+    names: {'en': 'Heartbeat', 'ru': 'Сердцебиение', 'ua': 'Серцебиття'},
+    category: EffectCategory.pulse,
+    previewColors: [Colors.red, Colors.black],
+  ),
+
+  // NATURE
+  AppEffect(
+    id: 'fire_glow',
+    names: {'en': 'Fire Glow', 'ru': 'Пламя огня', 'ua': 'Полум\'я вогню'},
+    category: EffectCategory.nature,
+    previewColors: [Colors.red, Colors.orange, Colors.yellow],
   ),
   AppEffect(
-    id: 'police',
-    names: {'en': 'Police Siren', 'ru': 'Сирена полиции', 'ua': 'Сирена поліції'},
-    driverEffectIds: {'ELK-BLEDOM': 136, 'SP110E': 15},
-    previewColors: [Colors.red, Colors.blue],
+    id: 'ice_cold',
+    names: {'en': 'Ice Cold', 'ru': 'Холодный лед', 'ua': 'Холодний лід'},
+    category: EffectCategory.nature,
+    previewColors: [Colors.cyan, Colors.blue, Colors.white],
+  ),
+  AppEffect(
+    id: 'forest_breath',
+    names: {'en': 'Forest Breath', 'ru': 'Дыхание леса', 'ua': 'Дихання лісу'},
+    category: EffectCategory.nature,
+    previewColors: [Colors.green, Colors.lime, Colors.teal],
   ),
   AppEffect(
     id: 'aurora',
     names: {'en': 'Aurora Borealis', 'ru': 'Полярное сияние', 'ua': 'Полярне сяйво'},
-    driverEffectIds: {'ELK-BLEDOM': 139, 'SP110E': 16},
+    category: EffectCategory.nature,
     previewColors: [Colors.deepPurple, Colors.teal, Colors.blue],
   ),
+
+  // SPECIAL
   AppEffect(
-    id: 'sw_pulse',
-    names: {'en': 'Software Pulse', 'ru': 'Программный пульс', 'ua': 'Програмний пульс'},
-    driverEffectIds: {},
-    previewColors: [Colors.white, Colors.black],
+    id: 'police',
+    names: {'en': 'Police Siren', 'ru': 'Сирена полиции', 'ua': 'Сирена поліції'},
+    category: EffectCategory.special,
+    previewColors: [Colors.red, Colors.blue],
   ),
   AppEffect(
-    id: 'sw_strobe',
-    names: {'en': 'Software Strobe', 'ru': 'Программный строб', 'ua': 'Програмний строб'},
-    driverEffectIds: {},
-    previewColors: [Colors.white, Colors.red],
+    id: 'christmas',
+    names: {'en': 'Christmas Holiday', 'ru': 'Новогодний перелив', 'ua': 'Новорічний перелив'},
+    category: EffectCategory.special,
+    previewColors: [Colors.red, Colors.green],
+  ),
+  AppEffect(
+    id: 'gold_rush',
+    names: {'en': 'Gold Rush', 'ru': 'Золотая лихорадка', 'ua': 'Золота лихоманка'},
+    category: EffectCategory.special,
+    previewColors: [Color(0xFFFFD700), Color(0xFFDAA520)],
+  ),
+  AppEffect(
+    id: 'valentine',
+    names: {'en': 'Valentine', 'ru': 'День Святого Валентина', 'ua': 'День Святого Валентина'},
+    category: EffectCategory.special,
+    previewColors: [Colors.pink, Colors.redAccent],
   ),
 ];
 
@@ -249,6 +308,7 @@ class DeviceManager extends ChangeNotifier {
   int _softwareEffectStep = 0;
   String? _currentEffectId;
   String? get currentEffectId => _currentEffectId;
+  final Random _random = Random();
 
   // ── История подключений ──
   List<Map<String, String>> _connectionHistory = [];
@@ -752,6 +812,28 @@ class DeviceManager extends ChangeNotifier {
             r = 0; g = 0; b = 0;
           }
           break;
+
+        case 'pastel_flow':
+          final h = (_softwareEffectStep * 3.0) % 360.0;
+          final rgb = HSVColor.fromAHSV(1.0, h, 0.4, 1.0).toColor();
+          r = (rgb.r * 255.0).round().clamp(0, 255); 
+          g = (rgb.g * 255.0).round().clamp(0, 255); 
+          b = (rgb.b * 255.0).round().clamp(0, 255);
+          break;
+
+        case 'toxic_flow':
+          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
+          r = (val * 100).toInt();
+          g = 255;
+          b = ((1 - val) * 100).toInt();
+          break;
+
+        case 'rgb_fade':
+          final phase = (_softwareEffectStep * 0.1) % (pi * 2);
+          r = (((sin(phase) + 1) / 2.0) * 255).toInt();
+          g = (((sin(phase + (pi * 2 / 3)) + 1) / 2.0) * 255).toInt();
+          b = (((sin(phase + (pi * 4 / 3)) + 1) / 2.0) * 255).toInt();
+          break;
           
         case 'fire_glow':
           final val = (sin(_softwareEffectStep * 0.3) + 1) / 2.0; 
@@ -790,10 +872,54 @@ class DeviceManager extends ChangeNotifier {
           else { r = 0; g = 0; b = 0; }
           break;
 
+        case 'police_double':
+          final step = _softwareEffectStep % 16;
+          if (step == 0 || step == 2) { r = 255; g = 0; b = 0; }
+          else if (step == 8 || step == 10) { r = 0; g = 0; b = 255; }
+          else { r = 0; g = 0; b = 0; }
+          break;
+
+        case 'thunderstorm':
+          if (_random.nextDouble() > 0.95) { r = 255; g = 255; b = 255; }
+          else { r = 20; g = 0; b = 40; } // deep purple background
+          break;
+
+        case 'neon_flash':
+          if (_softwareEffectStep % 3 == 0) {
+            final h = _random.nextDouble() * 360.0;
+            final rgb = HSVColor.fromAHSV(1.0, h, 1.0, 1.0).toColor();
+            r = (rgb.r * 255.0).round().clamp(0, 255); 
+            g = (rgb.g * 255.0).round().clamp(0, 255); 
+            b = (rgb.b * 255.0).round().clamp(0, 255);
+          } else {
+            r = 0; g = 0; b = 0;
+          }
+          break;
+
+        case 'heartbeat':
+          final step = _softwareEffectStep % 10;
+          if (step == 0 || step == 2) { r = 255; g = 0; b = 0; }
+          else { r = 10; g = 0; b = 0; }
+          break;
+
         case 'christmas':
           final step = _softwareEffectStep % 4;
           if (step < 2) { r = 255; g = 0; b = 0; }
           else { r = 0; g = 255; b = 0; }
+          break;
+
+        case 'gold_rush':
+          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
+          r = 255;
+          g = (215 - val * 50).toInt();
+          b = 0;
+          break;
+
+        case 'valentine':
+          final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
+          r = 255;
+          g = (val * 100).toInt();
+          b = (val * 150).toInt();
           break;
 
         case 'white_strobe':

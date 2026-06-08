@@ -246,6 +246,36 @@ const Map<String, Map<AppLanguage, String>> _strings = {
     AppLanguage.ru: 'Ссылка на Discord скопирована!',
     AppLanguage.ua: 'Посилання на Discord скопійовано!',
   },
+  'search_effects': {
+    AppLanguage.en: 'Search effects...',
+    AppLanguage.ru: 'Поиск эффектов...',
+    AppLanguage.ua: 'Пошук ефектів...',
+  },
+  'cat_color_flow': {
+    AppLanguage.en: 'Color Flow',
+    AppLanguage.ru: 'Переливы',
+    AppLanguage.ua: 'Переливи',
+  },
+  'cat_strobe': {
+    AppLanguage.en: 'Strobes',
+    AppLanguage.ru: 'Стробоскопы',
+    AppLanguage.ua: 'Стробоскопи',
+  },
+  'cat_pulse': {
+    AppLanguage.en: 'Pulsing',
+    AppLanguage.ru: 'Пульсация',
+    AppLanguage.ua: 'Пульсація',
+  },
+  'cat_nature': {
+    AppLanguage.en: 'Nature',
+    AppLanguage.ru: 'Природа',
+    AppLanguage.ua: 'Природа',
+  },
+  'cat_special': {
+    AppLanguage.en: 'Special',
+    AppLanguage.ru: 'Особые',
+    AppLanguage.ua: 'Особливі',
+  },
   'btn_copy': {
     AppLanguage.en: 'Copy',
     AppLanguage.ru: 'Копировать',
