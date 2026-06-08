@@ -43,6 +43,8 @@ unless File.exist?(plist_path)
       <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
       <key>CFBundleName</key>
       <string>$(PRODUCT_NAME)</string>
+      <key>CFBundleExecutable</key>
+      <string>$(EXECUTABLE_NAME)</string>
       <key>CFBundleDisplayName</key>
       <string>OmniLight Widget</string>
       <key>CFBundleShortVersionString</key>
