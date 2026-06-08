@@ -18,6 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import '../core/localization_theme_store.dart';
 import '../core/device_manager.dart';
 
@@ -64,6 +66,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Timer? _eqAnimationTimer;
   final List<double> _equalizerHeights = List.filled(12, 6.0);
   final Random _random = Random();
+  bool _isScanning = false;
+
+  // ── Аудиоплеер ──
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _selectedAudioFileName;
 
   // ── Анимации статус-индикаторов ──
   late final AnimationController _pulseController;
@@ -93,10 +100,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       parent: _scanRingController,
       curve: Curves.linear,
     );
+
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      if (state == PlayerState.completed) {
+        _stopMusicSync();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _colorDebounceTimer?.cancel();
     _musicSyncTimer?.cancel();
     _eqAnimationTimer?.cancel();
@@ -142,51 +157,81 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   // ── Управление Светомузыкой ──
   void _toggleMusicSync() {
     _hapticMedium();
-    final manager = context.read<DeviceManager>();
-
     if (_isMusicSyncing) {
-      _musicSyncTimer?.cancel();
-      _eqAnimationTimer?.cancel();
-      setState(() {
-        _isMusicSyncing = false;
-        for (int i = 0; i < _equalizerHeights.length; i++) {
-          _equalizerHeights[i] = 6.0;
-        }
-      });
-      // Восстанавливаем исходный выбранный цвет
-      if (manager.activeDrivers.isNotEmpty) {
-        manager.setRgb(
-          (_pickerColor.r * 255.0).round().clamp(0, 255),
-          (_pickerColor.g * 255.0).round().clamp(0, 255),
-          (_pickerColor.b * 255.0).round().clamp(0, 255),
-        );
-      }
+      _stopMusicSync();
     } else {
-      if (manager.activeDrivers.isEmpty) return;
-      setState(() => _isMusicSyncing = true);
+      _startMusicSync();
+    }
+  }
 
-      // Анимация прыгающего эквалайзера
-      _eqAnimationTimer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
-        setState(() {
-          for (int i = 0; i < _equalizerHeights.length; i++) {
-            _equalizerHeights[i] = _random.nextDouble() * 32.0 + 4.0;
-          }
-        });
-      });
+  void _stopMusicSync() {
+    _audioPlayer.pause();
+    _musicSyncTimer?.cancel();
+    _eqAnimationTimer?.cancel();
+    setState(() {
+      _isMusicSyncing = false;
+      for (int i = 0; i < _equalizerHeights.length; i++) {
+        _equalizerHeights[i] = 6.0;
+      }
+    });
+    final manager = context.read<DeviceManager>();
+    if (manager.activeDrivers.isNotEmpty) {
+      manager.setRgb(
+        (_pickerColor.r * 255.0).round().clamp(0, 255),
+        (_pickerColor.g * 255.0).round().clamp(0, 255),
+        (_pickerColor.b * 255.0).round().clamp(0, 255),
+      );
+    }
+  }
 
-      // Передача импульсов на ленту
-      _musicSyncTimer = Timer.periodic(const Duration(milliseconds: 250), (timer) {
-        final r = _random.nextInt(256);
-        final g = _random.nextInt(256);
-        final b = _random.nextInt(256);
-        // Добавляем яркости цветам
-        final maxVal = max(r, max(g, b));
-        if (maxVal < 100) {
-          manager.setRgb(r + 100, g + 100, b + 100);
-        } else {
-          manager.setRgb(r, g, b);
+  void _startMusicSync() {
+    final manager = context.read<DeviceManager>();
+    if (manager.activeDrivers.isEmpty) return;
+
+    setState(() => _isMusicSyncing = true);
+    
+    if (_selectedAudioFileName != null) {
+      _audioPlayer.resume();
+    }
+
+    _eqAnimationTimer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
+      setState(() {
+        for (int i = 0; i < _equalizerHeights.length; i++) {
+          _equalizerHeights[i] = _random.nextDouble() * 32.0 + 4.0;
         }
       });
+    });
+
+    _musicSyncTimer = Timer.periodic(const Duration(milliseconds: 250), (timer) {
+      final r = _random.nextInt(256);
+      final g = _random.nextInt(256);
+      final b = _random.nextInt(256);
+      final maxVal = max(r, max(g, b));
+      if (maxVal < 100) {
+        manager.setRgb(r + 100, g + 100, b + 100);
+      } else {
+        manager.setRgb(r, g, b);
+      }
+    });
+  }
+
+  Future<void> _pickAudioFile() async {
+    _hapticMedium();
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.audio,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      final name = result.files.single.name;
+      setState(() {
+        _selectedAudioFileName = name;
+      });
+      await _audioPlayer.setSourceDeviceFile(path);
+      
+      if (_isMusicSyncing) {
+        _stopMusicSync();
+      }
     }
   }
 
@@ -403,6 +448,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 );
               }),
             ),
+          ),
           ),
         ),
       ),
@@ -1208,20 +1254,58 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 16),
 
-          // Кнопка запуска
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: Icon(_isMusicSyncing ? Icons.stop_rounded : Icons.play_arrow_rounded),
-              label: Text(_isMusicSyncing ? store.tr('btn_stop') : store.tr('btn_start')),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isMusicSyncing ? Colors.redAccent : themeData.accentPrimary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          if (_selectedAudioFileName != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                '🎵 $_selectedAudioFileName',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: themeData.accentPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              onPressed: _toggleMusicSync,
             ),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.library_music_rounded, size: 18),
+                  label: Text(
+                    store.language == AppLanguage.ru ? 'Выбрать' : (store.language == AppLanguage.ua ? 'Обрати' : 'Load Audio'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeData.themeData.colorScheme.surface,
+                    foregroundColor: themeData.accentPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: _pickAudioFile,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: Icon(_isMusicSyncing ? Icons.stop_rounded : Icons.play_arrow_rounded, size: 18),
+                  label: Text(
+                    _isMusicSyncing ? store.tr('btn_stop') : store.tr('btn_start'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isMusicSyncing ? Colors.redAccent : themeData.accentPrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: _toggleMusicSync,
+                ),
+              ),
+            ],
           ),
         ],
       ),

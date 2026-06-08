@@ -718,39 +718,114 @@ class DeviceManager extends ChangeNotifier {
   // ─────────────────────────────────────────────
   Future<void> setEffect(String effectId, int speed) async {
     _softwareEffectTimer?.cancel();
-    
-    if (effectId.startsWith('sw_')) {
-      _startSoftwareEffect(effectId, speed);
-      return;
-    }
-
-    for (final driver in _activeDrivers.values) {
-      try {
-        final effect = appEffects.firstWhere((e) => e.id == effectId);
-        final physicalId = effect.driverEffectIds[driver.driverName] ?? 1;
-        await driver.setEffect(physicalId, speed);
-      } catch (e) {
-        debugPrint('[OmniLight/DeviceManager] Ошибка setEffect: $e');
-      }
-    }
+    _startSoftwareEffect(effectId, speed);
   }
 
   void _startSoftwareEffect(String effectId, int speed) {
-    final delay = max(30, 200 - speed).toInt();
+    // Длительность шага таймера от 20мс до 150мс в зависимости от ползунка скорости (1..100)
+    final delay = max(20, 150 - speed).toInt();
     _softwareEffectStep = 0;
     
     _softwareEffectTimer = Timer.periodic(Duration(milliseconds: delay), (timer) {
       _softwareEffectStep++;
-      if (effectId == 'sw_pulse') {
-        final val = ((sin(_softwareEffectStep * 0.2) + 1.0) / 2.0 * 255).toInt();
-        for (final driver in _activeDrivers.values) {
-          driver.setBrightness(val);
-        }
-      } else if (effectId == 'sw_strobe') {
-        final val = (_softwareEffectStep % 2 == 0) ? 255 : 0;
-        for (final driver in _activeDrivers.values) {
-          driver.setBrightness(val);
-        }
+      int r = 0, g = 0, b = 0;
+      
+      switch (effectId) {
+        case 'rainbow_flow':
+        case 'rainbow_chase':
+        case 'rainbow_strobe':
+          final h = (_softwareEffectStep * 5.0) % 360.0;
+          final rgb = HSVColor.fromAHSV(1.0, h, 1.0, 1.0).toColor();
+          r = rgb.red; g = rgb.green; b = rgb.blue;
+          if (effectId == 'rainbow_strobe' && _softwareEffectStep % 2 == 0) {
+            r = 0; g = 0; b = 0;
+          }
+          break;
+          
+        case 'fire_glow':
+          final val = (sin(_softwareEffectStep * 0.3) + 1) / 2.0; 
+          r = 255;
+          g = (val * 165).toInt(); 
+          b = 0;
+          break;
+          
+        case 'ice_cold':
+          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
+          r = (val * 100).toInt();
+          g = 255;
+          b = 255;
+          break;
+          
+        case 'forest_breath':
+          final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
+          r = 0;
+          g = (155 + val * 100).toInt();
+          b = (val * 50).toInt();
+          break;
+          
+        case 'neon_night':
+        case 'aurora':
+          final val = (sin(_softwareEffectStep * 0.1) + 1) / 2.0;
+          r = ((1 - val) * 200).toInt();
+          g = (val * 200).toInt();
+          b = 255;
+          break;
+          
+        case 'police':
+          final step = _softwareEffectStep % 8;
+          if (step < 2) { r = 255; g = 0; b = 0; }
+          else if (step < 4) { r = 0; g = 0; b = 0; }
+          else if (step < 6) { r = 0; g = 0; b = 255; }
+          else { r = 0; g = 0; b = 0; }
+          break;
+
+        case 'christmas':
+          final step = _softwareEffectStep % 4;
+          if (step < 2) { r = 255; g = 0; b = 0; }
+          else { r = 0; g = 255; b = 0; }
+          break;
+
+        case 'white_strobe':
+        case 'sw_strobe':
+          final val = (_softwareEffectStep % 2 == 0) ? 255 : 0;
+          r = val; g = val; b = val;
+          break;
+
+        case 'white_breath':
+        case 'sw_pulse':
+          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
+          r = val; g = val; b = val;
+          break;
+
+        case 'red_pulse':
+          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
+          r = val; g = 0; b = 0;
+          break;
+
+        case 'green_pulse':
+          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
+          r = 0; g = val; b = 0;
+          break;
+
+        case 'blue_pulse':
+          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
+          r = 0; g = 0; b = val;
+          break;
+
+        case 'sunset_fade':
+          final val = (sin(_softwareEffectStep * 0.05) + 1) / 2.0;
+          r = 255;
+          g = (val * 128).toInt();
+          b = ((1 - val) * 128).toInt();
+          break;
+
+        default:
+          r = 255; g = 255; b = 255;
+      }
+      
+      // Отправляем цвет сразу на все ленты
+      for (final driver in _activeDrivers.values) {
+        driver.setRgb(r, g, b);
       }
     });
   }

@@ -27,6 +27,8 @@ dependencies:
 
   # Иконки Material (расширенный набор)
   cupertino_icons: ^1.0.8
+  audioplayers: ^6.7.1
+  file_picker: ^11.0.2
 
 dev_dependencies:
   flutter_test:
