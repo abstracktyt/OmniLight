@@ -66,7 +66,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Timer? _eqAnimationTimer;
   final List<double> _equalizerHeights = List.filled(12, 6.0);
   final Random _random = Random();
-  bool _isScanning = false;
 
   // ── Аудиоплеер ──
   final AudioPlayer _audioPlayer = AudioPlayer();

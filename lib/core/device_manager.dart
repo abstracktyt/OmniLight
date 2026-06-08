@@ -736,7 +736,9 @@ class DeviceManager extends ChangeNotifier {
         case 'rainbow_strobe':
           final h = (_softwareEffectStep * 5.0) % 360.0;
           final rgb = HSVColor.fromAHSV(1.0, h, 1.0, 1.0).toColor();
-          r = rgb.red; g = rgb.green; b = rgb.blue;
+          r = (rgb.r * 255.0).round().clamp(0, 255); 
+          g = (rgb.g * 255.0).round().clamp(0, 255); 
+          b = (rgb.b * 255.0).round().clamp(0, 255);
           if (effectId == 'rainbow_strobe' && _softwareEffectStep % 2 == 0) {
             r = 0; g = 0; b = 0;
           }
