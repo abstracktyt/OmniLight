@@ -211,7 +211,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final themeData = store.currentThemeData;
 
     return Scaffold(
+      extendBody: true,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildHeader(store, themeData),
@@ -327,9 +329,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       {'icon': Icons.help_outline_rounded, 'activeIcon': Icons.help_rounded, 'label': 'tab_support'},
     ];
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      decoration: BoxDecoration(
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        decoration: BoxDecoration(
         color: themeData.cardColor.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
@@ -419,7 +422,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return SingleChildScrollView(
       physics: kIsWeb ? const ClampingScrollPhysics() : const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
       child: Column(
         children: [
           // Статус-бар подключения
@@ -1083,7 +1086,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return SingleChildScrollView(
       physics: kIsWeb ? const ClampingScrollPhysics() : const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
       child: Column(
         children: [
           // Светомузыка
@@ -1405,7 +1408,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return SingleChildScrollView(
       physics: kIsWeb ? const ClampingScrollPhysics() : const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1674,7 +1677,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return SingleChildScrollView(
       physics: kIsWeb ? const ClampingScrollPhysics() : const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
