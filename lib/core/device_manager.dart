@@ -654,7 +654,7 @@ class DeviceManager extends ChangeNotifier {
   void _updateConnectionStatus() {
     bool hasConnected = false;
     for (var driver in _activeDrivers.values) {
-      if (driver.isConnected) {
+      if (driver.state == DriverState.connected) {
         hasConnected = true;
         break;
       }

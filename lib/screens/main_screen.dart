@@ -139,7 +139,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         setState(() => _pickerColor = color);
         // Apply color
         final manager = context.read<DeviceManager>();
-        manager.setRgb(color.red, color.green, color.blue);
+        manager.setRgb(
+          (color.r * 255.0).round().clamp(0, 255),
+          (color.g * 255.0).round().clamp(0, 255),
+          (color.b * 255.0).round().clamp(0, 255),
+        );
       }
     }
   }
