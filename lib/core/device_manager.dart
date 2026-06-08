@@ -295,7 +295,7 @@ class DeviceManager extends ChangeNotifier {
         // Автоматическое подключение к сохраненным устройствам
         for (final d in _discoveredDevices) {
           if (_connectionHistory.any((item) => item['id'] == d.device.remoteId.toString())) {
-            connectToDevice(d);
+            connectToDevice(d, autoStopScan: false);
           }
         }
       }
@@ -393,7 +393,7 @@ class DeviceManager extends ChangeNotifier {
 
       // Авто-подключение, если устройство есть в истории
       if (_connectionHistory.any((item) => item['id'] == result.device.remoteId.toString())) {
-        connectToDevice(_discoveredDevices.last);
+        connectToDevice(_discoveredDevices.last, autoStopScan: false);
       }
     }
 
@@ -420,8 +420,10 @@ class DeviceManager extends ChangeNotifier {
   // ─────────────────────────────────────────────
   // Подключиться к выбранному устройству
   // ─────────────────────────────────────────────
-  Future<void> connectToDevice(DiscoveredDevice discovered) async {
-    await stopScan();
+  Future<void> connectToDevice(DiscoveredDevice discovered, {bool autoStopScan = true}) async {
+    if (autoStopScan) {
+      await stopScan();
+    }
 
     // Создаем НОВЫЙ экземпляр драйвера для этого конкретного подключения
     final driver = (discovered.matchedDriver is Sp110eDriver)
