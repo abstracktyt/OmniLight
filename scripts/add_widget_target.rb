@@ -47,6 +47,10 @@ unless File.exist?(plist_path)
     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
     <plist version="1.0">
     <dict>
+      <key>CFBundleDevelopmentRegion</key>
+      <string>$(DEVELOPMENT_LANGUAGE)</string>
+      <key>CFBundleInfoDictionaryVersion</key>
+      <string>6.0</string>
       <key>CFBundleIdentifier</key>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
       <key>CFBundleName</key>

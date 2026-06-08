@@ -42,19 +42,19 @@ struct OmniLightWidgetEntryView : View {
             Spacer()
             
             HStack {
-                Link(destination: URL(string: "omnilight://color?hex=FF3B30")!) {
+                Link(destination: URL(string: "omnilight://color?hex=FF3B30") ?? URL(string: "omnilight://")!) {
                     Circle().fill(Color.red).frame(width: 30, height: 30)
                 }
                 Spacer()
-                Link(destination: URL(string: "omnilight://color?hex=34C759")!) {
+                Link(destination: URL(string: "omnilight://color?hex=34C759") ?? URL(string: "omnilight://")!) {
                     Circle().fill(Color.green).frame(width: 30, height: 30)
                 }
                 Spacer()
-                Link(destination: URL(string: "omnilight://color?hex=007AFF")!) {
+                Link(destination: URL(string: "omnilight://color?hex=007AFF") ?? URL(string: "omnilight://")!) {
                     Circle().fill(Color.blue).frame(width: 30, height: 30)
                 }
                 Spacer()
-                Link(destination: URL(string: "omnilight://color?hex=FFFFFF")!) {
+                Link(destination: URL(string: "omnilight://color?hex=FFFFFF") ?? URL(string: "omnilight://")!) {
                     Circle().fill(Color.white).frame(width: 30, height: 30)
                 }
             }
