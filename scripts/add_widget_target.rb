@@ -31,6 +31,14 @@ file2 = widget_group.new_file('OmniLightWidgetBundle.swift')
 widget_target.source_build_phase.add_file_reference(file1)
 widget_target.source_build_phase.add_file_reference(file2)
 
+# Read pubspec.yaml to get the version
+pubspec_content = File.read('pubspec.yaml')
+version_line = pubspec_content.lines.find { |l| l.start_with?('version:') }
+# version: 1.0.0+1 -> name: 1.0.0, number: 1
+version_str = version_line.split(':')[1].strip
+version_name = version_str.split('+')[0]
+version_number = version_str.split('+')[1] || '1'
+
 # Create Info.plist for the widget
 plist_path = "ios/#{target_name}/Info.plist"
 unless File.exist?(plist_path)
@@ -48,9 +56,9 @@ unless File.exist?(plist_path)
       <key>CFBundleDisplayName</key>
       <string>OmniLight Widget</string>
       <key>CFBundleShortVersionString</key>
-      <string>$(FLUTTER_BUILD_NAME)</string>
+      <string>#{version_name}</string>
       <key>CFBundleVersion</key>
-      <string>$(FLUTTER_BUILD_NUMBER)</string>
+      <string>#{version_number}</string>
       <key>CFBundlePackageType</key>
       <string>XPC!</string>
       <key>NSExtension</key>
@@ -63,16 +71,28 @@ unless File.exist?(plist_path)
   XML
 end
 
+# Create minimal Assets.xcassets for the widget
+assets_path = "ios/#{target_name}/Assets.xcassets"
+unless Dir.exist?(assets_path)
+  FileUtils.mkdir_p("#{assets_path}/AppIcon.appiconset")
+  File.write("#{assets_path}/AppIcon.appiconset/Contents.json", <<~JSON)
+    {
+      "images" : [ ],
+      "info" : { "author" : "xcode", "version" : 1 }
+    }
+  JSON
+end
+
 plist_ref = widget_group.new_file('Info.plist')
+assets_ref = widget_group.new_file('Assets.xcassets')
 
 # Configure build settings for the widget
 widget_target.build_configurations.each do |config|
   config.build_settings['INFOPLIST_FILE'] = "#{target_name}/Info.plist"
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "com.abstrackt.omnilight.#{target_name}"
   config.build_settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = "AppIcon"
-  config.build_settings['ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME'] = "AccentColor"
-  config.build_settings['ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME'] = "WidgetBackground"
   config.build_settings['TARGETED_DEVICE_FAMILY'] = "1,2" # iPhone & iPad
+  config.build_settings['SKIP_INSTALL'] = "YES"
   config.build_settings['SWIFT_VERSION'] = "5.0"
   config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = "14.0"
   config.build_settings['PRODUCT_NAME'] = target_name
@@ -103,6 +123,10 @@ end
 frameworks_phase = widget_target.frameworks_build_phase
 frameworks_phase.add_file_reference(project.frameworks_group.new_file('WidgetKit.framework'))
 frameworks_phase.add_file_reference(project.frameworks_group.new_file('SwiftUI.framework'))
+
+# Add resources (Assets.xcassets) to build phase
+resources_phase = widget_target.resources_build_phase
+resources_phase.add_file_reference(assets_ref)
 
 project.save
 puts "Successfully configured Xcode project with Widget Extension."
