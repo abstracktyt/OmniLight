@@ -64,7 +64,7 @@ end
 
 # Make Runner depend on OmniLightWidget
 main_target = project.targets.find { |t| t.name == 'Runner' }
-project.new_target_dependency(main_target, widget_target)
+main_target.add_dependency(widget_target)
 
 # Embed App Extension into Runner
 embed_phase = main_target.new_copy_files_build_phase('Embed App Extensions')
