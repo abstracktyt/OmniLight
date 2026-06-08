@@ -61,6 +61,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   int _currentTab = 0;
   double _effectSpeed = 50.0;
   String _effectSearchQuery = '';
+  EffectCategory? _selectedCategory;
   final TextEditingController _effectSearchController = TextEditingController();
   Color _pickerColor = const Color(0xFF007AFF);
   Timer? _colorDebounceTimer;
@@ -1521,108 +1522,175 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         ),
 
         // Категории
-        ...EffectCategory.values.map((category) {
-          final categoryEffects = grouped[category];
-          if (categoryEffects == null || categoryEffects.isEmpty) return const SizedBox.shrink();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
-                child: Text(
-                  getCategoryName(category),
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: themeData.themeData.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 20),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: categoryEffects.length,
-                itemBuilder: (context, index) {
-                  final effect = categoryEffects[index];
-                  final name = effect.names[langCode] ?? effect.names['en']!;
-
-                  return GestureDetector(
-                    onTap: () {
-                      _hapticLight();
-                      if (_isMusicSyncing) _toggleMusicSync(); // Выключаем светомузыку, если включена
-                      manager.setEffect(effect.id, _effectSpeed.round());
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          colors: effect.previewColors.length > 1
-                              ? effect.previewColors
-                              : [effect.previewColors.first, effect.previewColors.first.withValues(alpha: 0.4)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: effect.previewColors.first.withValues(alpha: 0.25),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          )
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Stack(
-                          children: [
-                            Container(
-                              color: Colors.black.withValues(alpha: 0.15),
-                            ),
-                            Positioned(
-                              bottom: 12,
-                              left: 12,
-                              right: 12,
-                              child: Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))
-                                  ],
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: Icon(
-                                Icons.play_circle_fill_rounded,
-                                size: 20,
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
+              _buildCategoryChip(
+                label: store.language == AppLanguage.ru ? 'Все' : (store.language == AppLanguage.ua ? 'Усі' : 'All'),
+                isSelected: _selectedCategory == null,
+                themeData: themeData,
+                onTap: () {
+                  _hapticLight();
+                  setState(() => _selectedCategory = null);
                 },
               ),
+              ...EffectCategory.values.map((category) {
+                return _buildCategoryChip(
+                  label: getCategoryName(category),
+                  isSelected: _selectedCategory == category,
+                  themeData: themeData,
+                  onTap: () {
+                    _hapticLight();
+                    setState(() => _selectedCategory = category);
+                  },
+                );
+              }),
             ],
-          );
-        }),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Сетка эффектов для выбранной категории
+        Builder(
+          builder: (context) {
+            final displayEffects = filteredEffects.where((e) {
+              if (_selectedCategory == null) return true;
+              return e.category == _selectedCategory;
+            }).toList();
+
+            if (displayEffects.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text(
+                    store.tr('favorites_empty'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.5,
+              ),
+              itemCount: displayEffects.length,
+              itemBuilder: (context, index) {
+                final effect = displayEffects[index];
+                final name = effect.names[langCode] ?? effect.names['en']!;
+
+                return GestureDetector(
+                  onTap: () {
+                    _hapticLight();
+                    if (_isMusicSyncing) _toggleMusicSync(); // Выключаем светомузыку, если включена
+                    manager.setEffect(effect.id, _effectSpeed.round());
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: effect.previewColors.length > 1
+                            ? effect.previewColors
+                            : [effect.previewColors.first, effect.previewColors.first.withValues(alpha: 0.4)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: effect.previewColors.first.withValues(alpha: 0.25),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        children: [
+                          Container(
+                            color: Colors.black.withValues(alpha: 0.15),
+                          ),
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            right: 12,
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))
+                                ],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: Icon(
+                              Icons.play_circle_fill_rounded,
+                              size: 20,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ],
+    );
+  }
+
+  Widget _buildCategoryChip({
+    required String label,
+    required bool isSelected,
+    required AppThemeData themeData,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? themeData.accentPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? themeData.accentPrimary : themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? Colors.white : themeData.themeData.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+      ),
     );
   }
 

@@ -599,6 +599,26 @@ class DeviceManager extends ChangeNotifier {
         debugPrint('[OmniLight/DeviceManager] Ошибка turnOn: $e');
       }
     }
+    _updateWidgets();
+  }
+
+  void _updateWidgets() {
+    String status = 'отключено';
+    if (_state == DeviceManagerState.connected) {
+      if (_currentEffectId != null) {
+        status = 'эффект: ${_currentEffectId!.replaceAll('_', ' ')}';
+      } else {
+        status = 'цвет установлен';
+      }
+    } else if (_state == DeviceManagerState.connecting) {
+      status = 'подключение...';
+    }
+    
+    HomeWidget.saveWidgetData<String>('widget_status', status);
+    HomeWidget.updateWidget(
+      name: 'OmniLightWidgetProvider',
+      iOSName: 'OmniLightWidget',
+    );
   }
 
   // ─────────────────────────────────────────────
@@ -615,6 +635,7 @@ class DeviceManager extends ChangeNotifier {
         debugPrint('[OmniLight/DeviceManager] Ошибка turnOff: $e');
       }
     }
+    _updateWidgets();
   }
 
   // ─────────────────────────────────────────────
@@ -624,6 +645,7 @@ class DeviceManager extends ChangeNotifier {
     _softwareEffectTimer?.cancel();
     _currentEffectId = effectId;
     _startSoftwareEffect(effectId, speed);
+    _updateWidgets();
   }
 
   void updateEffectSpeed(int speed) {
@@ -641,165 +663,151 @@ class DeviceManager extends ChangeNotifier {
       _softwareEffectStep++;
       int r = 0, g = 0, b = 0;
       
-      switch (effectId) {
-        case 'rainbow_flow':
-        case 'rainbow_chase':
-        case 'rainbow_strobe':
-          final h = (_softwareEffectStep * 5.0) % 360.0;
-          final rgb = HSVColor.fromAHSV(1.0, h, 1.0, 1.0).toColor();
-          r = (rgb.r * 255.0).round().clamp(0, 255); 
-          g = (rgb.g * 255.0).round().clamp(0, 255); 
-          b = (rgb.b * 255.0).round().clamp(0, 255);
-          if (effectId == 'rainbow_strobe' && _softwareEffectStep % 2 == 0) {
-            r = 0; g = 0; b = 0;
-          }
-          break;
-
-        case 'pastel_flow':
-          final h = (_softwareEffectStep * 3.0) % 360.0;
-          final rgb = HSVColor.fromAHSV(1.0, h, 0.4, 1.0).toColor();
-          r = (rgb.r * 255.0).round().clamp(0, 255); 
-          g = (rgb.g * 255.0).round().clamp(0, 255); 
-          b = (rgb.b * 255.0).round().clamp(0, 255);
-          break;
-
-        case 'toxic_flow':
-          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
-          r = (val * 100).toInt();
-          g = 255;
-          b = ((1 - val) * 100).toInt();
-          break;
-
-        case 'rgb_fade':
-          final phase = (_softwareEffectStep * 0.1) % (pi * 2);
-          r = (((sin(phase) + 1) / 2.0) * 255).toInt();
-          g = (((sin(phase + (pi * 2 / 3)) + 1) / 2.0) * 255).toInt();
-          b = (((sin(phase + (pi * 4 / 3)) + 1) / 2.0) * 255).toInt();
-          break;
-          
-        case 'fire_glow':
-          final val = (sin(_softwareEffectStep * 0.3) + 1) / 2.0; 
-          r = 255;
-          g = (val * 165).toInt(); 
-          b = 0;
-          break;
-          
-        case 'ice_cold':
-          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
-          r = (val * 100).toInt();
-          g = 255;
-          b = 255;
-          break;
-          
-        case 'forest_breath':
-          final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
-          r = 0;
-          g = (155 + val * 100).toInt();
-          b = (val * 50).toInt();
-          break;
-          
-        case 'neon_night':
-        case 'aurora':
-          final val = (sin(_softwareEffectStep * 0.1) + 1) / 2.0;
-          r = ((1 - val) * 200).toInt();
-          g = (val * 200).toInt();
-          b = 255;
-          break;
-          
-        case 'police':
-          final step = _softwareEffectStep % 8;
-          if (step < 2) { r = 255; g = 0; b = 0; }
-          else if (step < 4) { r = 0; g = 0; b = 0; }
-          else if (step < 6) { r = 0; g = 0; b = 255; }
-          else { r = 0; g = 0; b = 0; }
-          break;
-
-        case 'police_double':
-          final step = _softwareEffectStep % 16;
-          if (step == 0 || step == 2) { r = 255; g = 0; b = 0; }
-          else if (step == 8 || step == 10) { r = 0; g = 0; b = 255; }
-          else { r = 0; g = 0; b = 0; }
-          break;
-
-        case 'thunderstorm':
-          if (_random.nextDouble() > 0.95) { r = 255; g = 255; b = 255; }
-          else { r = 20; g = 0; b = 40; } // deep purple background
-          break;
-
-        case 'neon_flash':
-          if (_softwareEffectStep % 3 == 0) {
-            final h = _random.nextDouble() * 360.0;
+      if (effectId.startsWith('pulse_')) {
+        final hex = effectId.split('_')[1];
+        final color = Color(int.parse("FF$hex", radix: 16));
+        final val = (sin(_softwareEffectStep * 0.1) + 1) / 2.0;
+        r = (color.red * val).toInt();
+        g = (color.green * val).toInt();
+        b = (color.blue * val).toInt();
+      } else if (effectId.startsWith('strobe_')) {
+        final hex = effectId.split('_')[1];
+        final color = Color(int.parse("FF$hex", radix: 16));
+        if (_softwareEffectStep % 2 == 0) {
+          r = color.red; g = color.green; b = color.blue;
+        }
+      } else if (effectId.startsWith('dblstrobe_')) {
+        final hex = effectId.split('_')[1];
+        final color = Color(int.parse("FF$hex", radix: 16));
+        final step = _softwareEffectStep % 8;
+        if (step == 0 || step == 2) {
+          r = color.red; g = color.green; b = color.blue;
+        }
+      } else if (effectId.startsWith('chase_')) {
+        final parts = effectId.split('_');
+        final color1 = Color(int.parse("FF${parts[1]}", radix: 16));
+        final color2 = Color(int.parse("FF${parts[2]}", radix: 16));
+        if ((_softwareEffectStep ~/ 4) % 2 == 0) {
+          r = color1.red; g = color1.green; b = color1.blue;
+        } else {
+          r = color2.red; g = color2.green; b = color2.blue;
+        }
+      } else if (effectId.startsWith('fade_')) {
+        final parts = effectId.split('_');
+        final color1 = Color(int.parse("FF${parts[1]}", radix: 16));
+        final color2 = Color(int.parse("FF${parts[2]}", radix: 16));
+        final val = (sin(_softwareEffectStep * 0.05) + 1) / 2.0;
+        r = (color1.red * val + color2.red * (1 - val)).toInt();
+        g = (color1.green * val + color2.green * (1 - val)).toInt();
+        b = (color1.blue * val + color2.blue * (1 - val)).toInt();
+      } else {
+        switch (effectId) {
+          case 'rainbow_flow':
+          case 'rainbow_chase':
+          case 'rainbow_strobe':
+            final h = (_softwareEffectStep * 5.0) % 360.0;
             final rgb = HSVColor.fromAHSV(1.0, h, 1.0, 1.0).toColor();
             r = (rgb.r * 255.0).round().clamp(0, 255); 
             g = (rgb.g * 255.0).round().clamp(0, 255); 
             b = (rgb.b * 255.0).round().clamp(0, 255);
-          } else {
-            r = 0; g = 0; b = 0;
-          }
-          break;
+            if (effectId == 'rainbow_strobe' && _softwareEffectStep % 2 == 0) {
+              r = 0; g = 0; b = 0;
+            }
+            break;
 
-        case 'heartbeat':
-          final step = _softwareEffectStep % 10;
-          if (step == 0 || step == 2) { r = 255; g = 0; b = 0; }
-          else { r = 10; g = 0; b = 0; }
-          break;
+          case 'pastel_flow':
+            final h = (_softwareEffectStep * 3.0) % 360.0;
+            final rgb = HSVColor.fromAHSV(1.0, h, 0.4, 1.0).toColor();
+            r = (rgb.r * 255.0).round().clamp(0, 255); 
+            g = (rgb.g * 255.0).round().clamp(0, 255); 
+            b = (rgb.b * 255.0).round().clamp(0, 255);
+            break;
 
-        case 'christmas':
-          final step = _softwareEffectStep % 4;
-          if (step < 2) { r = 255; g = 0; b = 0; }
-          else { r = 0; g = 255; b = 0; }
-          break;
+          case 'toxic_flow':
+            final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
+            r = (val * 100).toInt();
+            g = 255;
+            b = ((1 - val) * 100).toInt();
+            break;
 
-        case 'gold_rush':
-          final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
-          r = 255;
-          g = (215 - val * 50).toInt();
-          b = 0;
-          break;
+          case 'rgb_fade':
+            final phase = (_softwareEffectStep * 0.1) % (pi * 2);
+            r = (((sin(phase) + 1) / 2.0) * 255).toInt();
+            g = (((sin(phase + (pi * 2 / 3)) + 1) / 2.0) * 255).toInt();
+            b = (((sin(phase + (pi * 4 / 3)) + 1) / 2.0) * 255).toInt();
+            break;
+            
+          case 'fire_glow':
+            final val = (sin(_softwareEffectStep * 0.3) + 1) / 2.0; 
+            r = 255;
+            g = (val * 165).toInt(); 
+            b = 0;
+            break;
+            
+          case 'ice_cold':
+            final val = (sin(_softwareEffectStep * 0.2) + 1) / 2.0;
+            r = (val * 100).toInt();
+            g = 255;
+            b = 255;
+            break;
+            
+          case 'forest_breath':
+            final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
+            r = 0;
+            g = (155 + val * 100).toInt();
+            b = (val * 50).toInt();
+            break;
+            
+          case 'neon_night':
+          case 'aurora':
+            final val = (sin(_softwareEffectStep * 0.1) + 1) / 2.0;
+            r = ((1 - val) * 200).toInt();
+            g = (val * 200).toInt();
+            b = 255;
+            break;
+            
+          case 'police':
+            final step = _softwareEffectStep % 8;
+            if (step < 2) { r = 255; g = 0; b = 0; }
+            else if (step > 3 && step < 6) { r = 0; g = 0; b = 255; }
+            break;
+            
+          case 'police_double':
+            final step = _softwareEffectStep % 16;
+            if (step == 0 || step == 2) { r = 255; g = 0; b = 0; }
+            else if (step == 8 || step == 10) { r = 0; g = 0; b = 255; }
+            break;
+            
+          case 'heartbeat':
+            final step = _softwareEffectStep % 16;
+            if (step == 0 || step == 3) { r = 255; g = 0; b = 0; }
+            else { r = 40; g = 0; b = 0; }
+            break;
+            
+          case 'gold_rush':
+            final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
+            r = 255;
+            g = (165 + val * 50).toInt();
+            b = (val * 50).toInt();
+            break;
 
-        case 'valentine':
-          final val = (sin(_softwareEffectStep * 0.15) + 1) / 2.0;
-          r = 255;
-          g = (val * 100).toInt();
-          b = (val * 150).toInt();
-          break;
-
-        case 'white_strobe':
-        case 'sw_strobe':
-          final val = (_softwareEffectStep % 2 == 0) ? 255 : 0;
-          r = val; g = val; b = val;
-          break;
-
-        case 'white_breath':
-        case 'sw_pulse':
-          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
-          r = val; g = val; b = val;
-          break;
-
-        case 'red_pulse':
-          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
-          r = val; g = 0; b = 0;
-          break;
-
-        case 'green_pulse':
-          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
-          r = 0; g = val; b = 0;
-          break;
-
-        case 'blue_pulse':
-          final val = (((sin(_softwareEffectStep * 0.1) + 1) / 2.0) * 255).toInt();
-          r = 0; g = 0; b = val;
-          break;
-
-        case 'sunset_fade':
-          final val = (sin(_softwareEffectStep * 0.05) + 1) / 2.0;
-          r = 255;
-          g = (val * 128).toInt();
-          b = ((1 - val) * 128).toInt();
-          break;
-
-        default:
-          r = 255; g = 255; b = 255;
+          case 'thunderstorm':
+            r = 26; g = 0; b = 51;
+            if (_random.nextDouble() > 0.95) {
+              r = 255; g = 255; b = 255;
+            }
+            break;
+            
+          case 'neon_flash':
+            if (_softwareEffectStep % 5 == 0) {
+              r = _random.nextBool() ? 255 : 0;
+              g = _random.nextBool() ? 255 : 0;
+              b = 255;
+            } else {
+              r = 10; g = 10; b = 10;
+            }
+            break;
+        }
       }
       
       // Отправляем цвет сразу на все ленты
@@ -816,6 +824,7 @@ class DeviceManager extends ChangeNotifier {
     _state = newState;
     _errorMessage = null;
     notifyListeners();
+    _updateWidgets();
   }
 
   void _setError(String message) {
