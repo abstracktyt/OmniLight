@@ -669,39 +669,56 @@ class DeviceManager extends ChangeNotifier {
         final hex = effectId.split('_')[1];
         final color = Color(int.parse("FF$hex", radix: 16));
         final val = (sin(_softwareEffectStep * 0.1) + 1) / 2.0;
-        r = (color.red * val).toInt();
-        g = (color.green * val).toInt();
-        b = (color.blue * val).toInt();
+        final cr = (color.r * 255.0).round();
+        final cg = (color.g * 255.0).round();
+        final cb = (color.b * 255.0).round();
+        r = (cr * val).toInt();
+        g = (cg * val).toInt();
+        b = (cb * val).toInt();
       } else if (effectId.startsWith('strobe_')) {
         final hex = effectId.split('_')[1];
         final color = Color(int.parse("FF$hex", radix: 16));
         if (_softwareEffectStep % 2 == 0) {
-          r = color.red; g = color.green; b = color.blue;
+          r = (color.r * 255.0).round(); 
+          g = (color.g * 255.0).round(); 
+          b = (color.b * 255.0).round();
         }
       } else if (effectId.startsWith('dblstrobe_')) {
         final hex = effectId.split('_')[1];
         final color = Color(int.parse("FF$hex", radix: 16));
         final step = _softwareEffectStep % 8;
         if (step == 0 || step == 2) {
-          r = color.red; g = color.green; b = color.blue;
+          r = (color.r * 255.0).round(); 
+          g = (color.g * 255.0).round(); 
+          b = (color.b * 255.0).round();
         }
       } else if (effectId.startsWith('chase_')) {
         final parts = effectId.split('_');
         final color1 = Color(int.parse("FF${parts[1]}", radix: 16));
         final color2 = Color(int.parse("FF${parts[2]}", radix: 16));
         if ((_softwareEffectStep ~/ 4) % 2 == 0) {
-          r = color1.red; g = color1.green; b = color1.blue;
+          r = (color1.r * 255.0).round(); 
+          g = (color1.g * 255.0).round(); 
+          b = (color1.b * 255.0).round();
         } else {
-          r = color2.red; g = color2.green; b = color2.blue;
+          r = (color2.r * 255.0).round(); 
+          g = (color2.g * 255.0).round(); 
+          b = (color2.b * 255.0).round();
         }
       } else if (effectId.startsWith('fade_')) {
         final parts = effectId.split('_');
         final color1 = Color(int.parse("FF${parts[1]}", radix: 16));
         final color2 = Color(int.parse("FF${parts[2]}", radix: 16));
         final val = (sin(_softwareEffectStep * 0.05) + 1) / 2.0;
-        r = (color1.red * val + color2.red * (1 - val)).toInt();
-        g = (color1.green * val + color2.green * (1 - val)).toInt();
-        b = (color1.blue * val + color2.blue * (1 - val)).toInt();
+        final c1r = (color1.r * 255.0).round();
+        final c1g = (color1.g * 255.0).round();
+        final c1b = (color1.b * 255.0).round();
+        final c2r = (color2.r * 255.0).round();
+        final c2g = (color2.g * 255.0).round();
+        final c2b = (color2.b * 255.0).round();
+        r = (c1r * val + c2r * (1 - val)).toInt();
+        g = (c1g * val + c2g * (1 - val)).toInt();
+        b = (c1b * val + c2b * (1 - val)).toInt();
       } else {
         switch (effectId) {
           case 'rainbow_flow':
