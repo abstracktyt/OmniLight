@@ -13,6 +13,7 @@
 
 import 'dart:async';
 import 'dart:io' show Platform;
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -135,6 +136,18 @@ const List<AppEffect> appEffects = [
     driverEffectIds: {'ELK-BLEDOM': 139, 'SP110E': 16},
     previewColors: [Colors.deepPurple, Colors.teal, Colors.blue],
   ),
+  AppEffect(
+    id: 'sw_pulse',
+    names: {'en': 'Software Pulse', 'ru': 'Программный пульс', 'ua': 'Програмний пульс'},
+    driverEffectIds: {},
+    previewColors: [Colors.white, Colors.black],
+  ),
+  AppEffect(
+    id: 'sw_strobe',
+    names: {'en': 'Software Strobe', 'ru': 'Программный строб', 'ua': 'Програмний строб'},
+    driverEffectIds: {},
+    previewColors: [Colors.white, Colors.red],
+  ),
 ];
 
 // Проверка: работаем ли мы на мобильной платформе (iOS/Android)
@@ -231,6 +244,10 @@ class DeviceManager extends ChangeNotifier {
   int get green => _green;
   int get blue => _blue;
 
+  // ── Software Effects ──
+  Timer? _softwareEffectTimer;
+  int _softwareEffectStep = 0;
+
   // ── История подключений ──
   List<Map<String, String>> _connectionHistory = [];
   List<Map<String, String>> get connectionHistory => _connectionHistory;
@@ -320,8 +337,13 @@ class DeviceManager extends ChangeNotifier {
       case BluetoothAdapterState.on:
         // BLE включён и готов к работе
         if (_state == DeviceManagerState.bleOff ||
-            _state == DeviceManagerState.bleUnavailable) {
+            _state == DeviceManagerState.bleUnavailable ||
+            _state == DeviceManagerState.idle) {
           _setState(DeviceManagerState.idle);
+          
+          if (_connectionHistory.isNotEmpty && !_isScanning && _activeDrivers.isEmpty) {
+            startScan();
+          }
         }
         break;
 
@@ -396,6 +418,12 @@ class DeviceManager extends ChangeNotifier {
       }
       if (_discoveredDevices.isNotEmpty) {
         notifyListeners();
+        // Автоматическое подключение к сохраненным устройствам
+        for (final d in _discoveredDevices) {
+          if (_connectionHistory.any((item) => item['id'] == d.device.remoteId.toString())) {
+            connectToDevice(d);
+          }
+        }
       }
     } catch (e) {
       debugPrint('[OmniLight/DeviceManager] Ошибка при получении подключенных к системе устройств: $e');
@@ -488,6 +516,11 @@ class DeviceManager extends ChangeNotifier {
       ));
 
       changed = true;
+
+      // Авто-подключение, если устройство есть в истории
+      if (_connectionHistory.any((item) => item['id'] == result.device.remoteId.toString())) {
+        connectToDevice(_discoveredDevices.last);
+      }
     }
 
     if (changed) notifyListeners();
@@ -600,6 +633,7 @@ class DeviceManager extends ChangeNotifier {
   // Отключиться от всех устройств
   // ─────────────────────────────────────────────
   Future<void> disconnectCurrent() async {
+    _softwareEffectTimer?.cancel();
     for (final driver in _activeDrivers.values) {
       try {
         await driver.disconnect();
@@ -616,6 +650,7 @@ class DeviceManager extends ChangeNotifier {
   // Команда: установить цвет RGB (с сохранением состояния в UI)
   // ─────────────────────────────────────────────
   Future<void> setRgb(int r, int g, int b) async {
+    _softwareEffectTimer?.cancel();
     _red = r;
     _green = g;
     _blue = b;
@@ -633,6 +668,7 @@ class DeviceManager extends ChangeNotifier {
   // Команда: установить яркость
   // ─────────────────────────────────────────────
   Future<void> setBrightness(int level) async {
+    _softwareEffectTimer?.cancel();
     _brightness = level.clamp(0, 255);
     notifyListeners();
     for (final driver in _activeDrivers.values) {
@@ -648,6 +684,7 @@ class DeviceManager extends ChangeNotifier {
   // Команда: включить
   // ─────────────────────────────────────────────
   Future<void> turnOn() async {
+    _softwareEffectTimer?.cancel();
     for (final driver in _activeDrivers.values) {
       try {
         await driver.turnOn();
@@ -664,6 +701,7 @@ class DeviceManager extends ChangeNotifier {
   // Команда: выключить
   // ─────────────────────────────────────────────
   Future<void> turnOff() async {
+    _softwareEffectTimer?.cancel();
     for (final driver in _activeDrivers.values) {
       try {
         await driver.turnOff();
@@ -679,6 +717,13 @@ class DeviceManager extends ChangeNotifier {
   // Команда: установить динамический эффект
   // ─────────────────────────────────────────────
   Future<void> setEffect(String effectId, int speed) async {
+    _softwareEffectTimer?.cancel();
+    
+    if (effectId.startsWith('sw_')) {
+      _startSoftwareEffect(effectId, speed);
+      return;
+    }
+
     for (final driver in _activeDrivers.values) {
       try {
         final effect = appEffects.firstWhere((e) => e.id == effectId);
@@ -688,6 +733,26 @@ class DeviceManager extends ChangeNotifier {
         debugPrint('[OmniLight/DeviceManager] Ошибка setEffect: $e');
       }
     }
+  }
+
+  void _startSoftwareEffect(String effectId, int speed) {
+    final delay = max(30, 200 - speed).toInt();
+    _softwareEffectStep = 0;
+    
+    _softwareEffectTimer = Timer.periodic(Duration(milliseconds: delay), (timer) {
+      _softwareEffectStep++;
+      if (effectId == 'sw_pulse') {
+        final val = ((sin(_softwareEffectStep * 0.2) + 1.0) / 2.0 * 255).toInt();
+        for (final driver in _activeDrivers.values) {
+          driver.setBrightness(val);
+        }
+      } else if (effectId == 'sw_strobe') {
+        final val = (_softwareEffectStep % 2 == 0) ? 255 : 0;
+        for (final driver in _activeDrivers.values) {
+          driver.setBrightness(val);
+        }
+      }
+    });
   }
 
   // ─────────────────────────────────────────────
@@ -710,6 +775,7 @@ class DeviceManager extends ChangeNotifier {
   // ─────────────────────────────────────────────
   @override
   void dispose() {
+    _softwareEffectTimer?.cancel();
     _scanSubscription?.cancel();
     _adapterSubscription?.cancel();
     for (final driver in _activeDrivers.values) {

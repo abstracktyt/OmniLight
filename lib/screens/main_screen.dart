@@ -1958,6 +1958,57 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          // Строка с Discord-сервером
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: themeData.themeData.colorScheme.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Discord: http://dsc.gg/OmniLight',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF5865F2), // Discord color
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    _hapticLight();
+                    Clipboard.setData(const ClipboardData(text: 'http://dsc.gg/OmniLight'));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(store.tr('support_feedback_copied')),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: const Color(0xFF5865F2),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF5865F2).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      store.tr('btn_copy'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF5865F2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -2473,26 +2524,29 @@ class _FaqTileState extends State<_FaqTile> {
       ),
       child: Column(
         children: [
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-            title: Text(
-              widget.question,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: themeData.themeData.colorScheme.onSurface,
+          Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+              title: Text(
+                widget.question,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: themeData.themeData.colorScheme.onSurface,
+                ),
               ),
+              trailing: Icon(
+                _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                color: themeData.accentPrimary,
+                size: 20,
+              ),
+              onTap: () {
+                setState(() {
+                  _isExpanded = !_isExpanded;
+                });
+              },
             ),
-            trailing: Icon(
-              _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-              color: themeData.accentPrimary,
-              size: 20,
-            ),
-            onTap: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
           ),
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
