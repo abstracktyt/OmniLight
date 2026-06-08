@@ -137,6 +137,16 @@ jobs:
             cp -r build/ios/iphoneos/Runner.app "$PAYLOAD_DIR/OmniLight.app" || exit 1
           fi
           
+          echo "Содержимое Payload/OmniLight.app:"
+          ls -la "$PAYLOAD_DIR/OmniLight.app"
+          
+          if [ -d "$PAYLOAD_DIR/OmniLight.app/PlugIns" ]; then
+            echo "Содержимое PlugIns:"
+            ls -la "$PAYLOAD_DIR/OmniLight.app/PlugIns"
+          else
+            echo "ПАПКА PlugIns НЕ НАЙДЕНА! Виджет не скомпилировался или не скопировался!"
+          fi
+          
           # Архивируем Payload в .ipa
           cd "${{ runner.temp }}"
           zip -qr "OmniLight.ipa" "Payload"
